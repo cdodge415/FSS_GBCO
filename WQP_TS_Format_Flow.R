@@ -26,9 +26,9 @@ sub <- flow[,c("ActivityStartDate","ActivityStartTime/Time", "ActivityStartTime/
             "MonitoringLocationIdentifier",
             "ResultMeasureValue", "ResultMeasure/MeasureUnitCode", "HUC")]
 rm(HUC14, HUC15, HUC16, flow) # To save space and speed things up
+
 colnames(sub) <- c("Date","Time","TimeZone",
                    "SiteID","Value","Units", "HUC")
-head(sub)
 
 ## Adjust to create DateTime column 
 sub$Date <- as.POSIXct(as.character(sub$Date), format="%Y-%m-%d")
@@ -50,7 +50,7 @@ head(sub,20)
 sapply(sub, class)
 sub$Value <- as.numeric(sub$Value)
 
-## Recast so parameters all separate columns
+## Recast so parameters all have separate columns
 ## Fix units
 levels(as.factor(sub$Units))
 sub$Units[sub$Units == ""] <- NA
