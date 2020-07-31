@@ -110,3 +110,15 @@ final_SC_uv <- USGS_SC_uv_data[which(USGS_SC_uv_data$X_00095_00000_cd == "A"),]
 class(final_SC_uv$site_no)
 levels(final_SC_uv$site_no)
 saveRDS(final_SC_uv, "USGS_SC_uv_data_AFP.rds")
+
+# Had Joanna run this later to get dv data for SC #####
+overlap_huc_sites <- readRDS("GBCO_dischSC_sites.rds")
+parameterCd <- c("00095")
+startDate <- ""
+endDate <- ""
+# ------ dv (daily value/daily mean) data ----
+siteNumber <- overlap_huc_sites$Site_ID[which(overlap_huc_sites$data_type_cd == "dv")]
+# there are 366 sites with dv SC data. not sure why this would be when there is only 70 with uv?
+dfLong <- readNWISdv(siteNumber, parameterCd, 
+                     startDate, endDate)
+saveRDS(dfLong, "USGS_SC_dv_data.rds")
