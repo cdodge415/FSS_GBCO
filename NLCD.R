@@ -4,6 +4,8 @@ library(raster)
 library(sp)
 library(rgdal)
 library(fasterize)
+# NEW: Clip NLCD to watersheds in ArcMap or QGIS, try to calculate PLAND in R
+
 # NOT RUN {
 # Extract data for the Village Ecodynamics Project 'VEPIIN' study area:
 # http://village.anth.wsu.edu
