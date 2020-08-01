@@ -15,7 +15,7 @@ source(here("concurrent_overlap.R"))
 #Read in the data queries
   # disch_query <- readRDS(here("output", "disch_query.rds")) 
   # SC_query <- readRDS(here("output", "SC_query.rds"))
- disch_query <- readRDS(here("disch_query.rds")) 
+ disch_query <- readRDS(here("disch_query.rds"))
  SC_query <- readRDS(here("SC_query.rds"))
 
 #-------------------------------------------------
@@ -43,9 +43,20 @@ source(here("concurrent_overlap.R"))
       min_obs = 1
     )
   # there are 2002 sites in the COUNTRY with SC and Discharge sensors  
-  
+    
 write.csv(disch_SC_sensor, "disch_SC_sensor.csv")
 
+#See what sites have SC that do not have discharge    
+SC_noQ <- setdiff(SC_lotic_sensor, disch_SC_sensor) # 811 sites
+unique(SC_query$Site_ID)
+SC_query[duplicated(SC_query$Site_ID),]
+SC_noQ <- SC_query[which(SC_query$Site_ID %in% SC_noQ$Site_ID),]
+SC_noQ$Site_ID <- as.factor(SC_noQ$Site_ID)  
+levels(SC_noQ$Site_ID) 
+SC_noQ$site_tp_cd <- as.factor(SC_noQ$site_tp_cd)
+levels(SC_noQ$site_tp_cd) # already filtered for only flowing waters
+
+write.csv(SC_noQ, "SC_sensor_only.csv")
 
 
 #disch_query$HUC <- substr(disch_query$huc_cd,1,2)
