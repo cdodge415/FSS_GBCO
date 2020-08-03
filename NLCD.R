@@ -82,19 +82,19 @@ print(prop.lc)
 
 ###############################################################################################
 
-# # Example from FedData vignette:
-# # NOT RUN {
-# vepPolygon <- polygon_from_extent(raster::extent(672800,740000,4102000,4170000),
-#                                   proj4string='+proj=utm +datum=NAD83 +zone=12')
-# class(vepPolygon)
-# 
-# # Get the NLCD (USA ONLY)
-# # Returns a raster
-# NLCD <- get_nlcd(template=vepPolygon, label='VEPIIN')
-# 
-# # Plot with raster::plot
-# plot(NLCD)
-# 
+# Example from FedData vignette:
+# NOT RUN {
+vepPolygon <- polygon_from_extent(raster::extent(672800,740000,4102000,4170000),
+                                  proj4string='+proj=utm +datum=NAD83 +zone=12')
+class(vepPolygon)
+
+# Get the NLCD (USA ONLY)
+# Returns a raster
+NLCD <- get_nlcd(template=vepPolygon, label='VEPIIN')
+
+# Plot with raster::plot
+plot(NLCD)
+
 
 
 
