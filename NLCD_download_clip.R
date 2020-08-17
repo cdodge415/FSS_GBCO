@@ -70,30 +70,30 @@ setwd("/Volumes/Blaszczak Lab/FSS/NHD")
 files <- list.files(path = '/Volumes/Blaszczak Lab/FSS/NHD', pattern = "NHD_H_")
 class(files)
 files <- as.list(files)
-
 # Just get it to work for 1 HUC8 watershed: 
 huc8_1 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[1], "/WBDHU8.shp"))
 huc8_1
 # class(huc8_1) # "sf" "data.frame"
 huc8_1 <- st_transform(huc8_1, crs = " +proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +ellps=WGS84 +towgs84=0,0,0,-0,-0,-0,0 +units=m +no_defs")
 huc8_1_sp <- as(huc8_1, Class = "Spatial")
+
 class(huc8_1_sp) # "SpatialPolygonsDataFrame:"attr(,"package") "sp"
 huc8_1_split <- split(huc8_1, huc8_1$Name)
 list2env(huc8_1_split, envir = .GlobalEnv)
+
 class(Blue) # "sf" "data.frame"
 Blue # the projection is still correct from when we transformed it before
 Blue <- as(Blue, Class = "Spatial")
-
 # Bring in cropped NLCD data
 setwd("/Volumes/Blaszczak Lab/FSS/NLCD/NLCD_2016_Land_Cover_L48_20190424 (1)")
 nlcd <- raster("GBCO_NLCD_masked_raster.tif")
 GDALinfo("GBCO_NLCD_masked_raster.tif")
 attributes(nlcd)
 # plot(nlcd)
-
 # After bringing in NLCD data, continue to try to get this to work for 1 HUC8 watershed (Blue)
 nlcd_c_Blue <- crop(nlcd, Blue)
 nlcd_Blue <- mask(nlcd_c_Blue, Blue)
+
 plot(nlcd_Blue)
 class(nlcd_Blue)
 writeRaster(nlcd_Blue, "nlcd_Blue_huc14010001.tif")
@@ -101,10 +101,10 @@ GDALinfo("nlcd_Blue_huc14010001.tif")
 # nlcd_Blue@file@nodatavalue
 
 View(nlcd_Blue@data@attributes[[1]])
-
 huc8df <- nlcd_Blue@data@attributes[[1]]
 sapply(huc8df, class)
 levels(huc8df$NLCD.Land.Cover.Class)
+
 huc8df <- huc8df[-which(huc8df$NLCD.Land.Cover.Class == ""),]
 huc8df <- huc8df[-which(huc8df$NLCD.Land.Cover.Class == "Unclassified"),]
 huc8df$NLCD.Land.Cover.Class <- factor(huc8df$NLCD.Land.Cover.Class)
@@ -123,7 +123,7 @@ ggplot(huc8df)+
 setwd("/Volumes/Blaszczak Lab/FSS/NLCD/NLCD_2016_Land_Cover_L48_20190424 (1)")
 nlcd_basins <- raster("GBCO_NLCD_masked_raster.tif")
 
-read_shp <- function(x){
+clip_pland <- function(x){
   files <- list.files(path = '/Volumes/Blaszczak Lab/FSS/NHD', pattern = "NHD_H_")
   class(files)
   files <- as.list(files)
@@ -152,7 +152,7 @@ read_shp <- function(x){
   
 }
 
-lapply(files, read_shp) # run with huc8_split[[1]], then do 2, 3, 4, 5. Had to go through files manually for 6, as not all file groups had this many huc8 watersheds
+lapply(files, clip_pland) # run with huc8_split[[1]], then do 2, 3, 4, 5. Had to go through files manually for 6, as not all file groups had this many huc8 watersheds
 # [[7]] for files[4:16, 18:22]
 # [[8]] for files [6, 8:11, 13, 14, 18:22]
 # [[9]] for files [8:14, 18:22]
@@ -167,7 +167,7 @@ lapply(files, read_shp) # run with huc8_split[[1]], then do 2, 3, 4, 5. Had to g
 # [[18]] for files [10]
 
 x <- files[10]
-read_shp(x)
+clip_pland(x)
 # 214 huc 8 watersheds (verify this)
 
 
