@@ -127,7 +127,7 @@ clip_pland <- function(x){
   files <- list.files(path = '/Volumes/Blaszczak Lab/FSS/NHD', pattern = "NHD_H_")
   class(files)
   files <- as.list(files)
-  #x <- files[7]
+  #x <- files[7] 
   huc8 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", x, "/WBDHU8.shp"))
   huc8 <- st_transform(huc8, crs = " +proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +ellps=WGS84 +towgs84=0,0,0,-0,-0,-0,0 +units=m +no_defs")
   huc8_sp <- as(huc8, Class = "Spatial")
