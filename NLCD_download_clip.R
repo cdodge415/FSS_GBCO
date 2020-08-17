@@ -52,29 +52,6 @@ library(ggplot2)
 # basins
 # basins_sp <- as(basins, Class = "Spatial")
 # 
-# Should be able to delete this part VVVVVVVVVVVVVVVVVVVVVV
-#nlcd_14e <- extract(nlcd, basin14_sp) # takes way too long
-# class(nlcd_14)
-# plot(nlcd)
-# plot(basin14)
-# # Try for individual basins
-# nlcd_14c <- crop(nlcd, basin14_sp) # only takes a few minutes; I think it crops to the extent of the watershed
-# plot(nlcd_14c)
-# nlcd_14m <- mask(nlcd_14c, basin14_sp) # also only takes a few minutes
-# plot(nlcd_14m)
-#
-# nlcd_15c <- crop(nlcd, basin15_sp)
-# plot(nlcd_15c)
-# nlcd_15m <- mask(nlcd_15c, basin15_sp)
-# plot(nlcd_15m)
-#
-# nlcd_16c <- crop(nlcd, basin16_sp)
-# plot(nlcd_16c)
-# nlcd_16m <- mask(nlcd_16c, basin16_sp)
-# plot(nlcd_16m)
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-# And just use this:
 # # Try for all basins together
 # nlcd_c <- crop(nlcd, basins_sp)
 # plot(nlcd_c)
@@ -94,62 +71,8 @@ files <- list.files(path = '/Volumes/Blaszczak Lab/FSS/NHD', pattern = "NHD_H_")
 class(files)
 files <- as.list(files)
 
-
-huc8_1 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[1], "/WBDHU8.shp"))
-# huc8_2 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[2], "/WBDHU8.shp"))
-# huc8_3 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[3], "/WBDHU8.shp"))
-# huc8_4 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[4], "/WBDHU8.shp"))
-# huc8_5 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[5], "/WBDHU8.shp"))
-# huc8_6 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[6], "/WBDHU8.shp"))
-# huc8_7 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[7], "/WBDHU8.shp"))
-# huc8_8 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[8], "/WBDHU8.shp"))
-# huc8_9 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[9], "/WBDHU8.shp"))
-# huc8_10 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[10], "/WBDHU8.shp"))
-# huc8_11 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[11], "/WBDHU8.shp"))
-# huc8_12 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[12], "/WBDHU8.shp"))
-# huc8_13 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[13], "/WBDHU8.shp"))
-# huc8_14 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[14], "/WBDHU8.shp"))
-# huc8_15 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[15], "/WBDHU8.shp"))
-# huc8_16 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[16], "/WBDHU8.shp"))
-# huc8_17 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[17], "/WBDHU8.shp"))
-# huc8_18 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[18], "/WBDHU8.shp"))
-# huc8_19 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[19], "/WBDHU8.shp"))
-# huc8_20 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[20], "/WBDHU8.shp"))
-# huc8_21 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[21], "/WBDHU8.shp"))
-# huc8_22 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[22], "/WBDHU8.shp"))
-
-# Need to transform all to correct CRS here
-
-# rm(files)
-# 
-# huc8 <- rbind(huc8_1, huc8_2)
-# huc8 <- rbind(huc8, huc8_3)
-# huc8 <- rbind(huc8, huc8_4)
-# huc8 <- rbind(huc8, huc8_5)
-# huc8 <- rbind(huc8, huc8_6)
-# huc8 <- rbind(huc8, huc8_7)
-# huc8 <- rbind(huc8, huc8_8)
-# huc8 <- rbind(huc8, huc8_9)
-# huc8 <- rbind(huc8, huc8_10)
-# huc8 <- rbind(huc8, huc8_11)
-# huc8 <- rbind(huc8, huc8_12)
-# huc8 <- rbind(huc8, huc8_13)
-# huc8 <- rbind(huc8, huc8_14)
-# huc8 <- rbind(huc8, huc8_15)
-# huc8 <- rbind(huc8, huc8_16)
-# huc8 <- rbind(huc8, huc8_17)
-# huc8 <- rbind(huc8, huc8_18)
-# huc8 <- rbind(huc8, huc8_19)
-# huc8 <- rbind(huc8, huc8_20)
-# huc8 <- rbind(huc8, huc8_21)
-# huc8 <- rbind(huc8, huc8_22)
-
-# class(huc8)
-# huc8 <- as(huc8, Class = "Spatial")
-
-# rm(huc8_1, huc8_10, huc8_11,huc8_12, huc8_13, huc8_14, huc8_15, huc8_16, huc8_17, huc8_18, huc8_19, huc8_2, huc8_20, huc8_21, huc8_22, huc8_3,huc8_4, huc8_5, huc8_6, huc8_7, huc8_8, huc8_9)
-
 # Just get it to work for 1 HUC8 watershed: 
+huc8_1 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[1], "/WBDHU8.shp"))
 huc8_1
 # class(huc8_1) # "sf" "data.frame"
 huc8_1 <- st_transform(huc8_1, crs = " +proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +ellps=WGS84 +towgs84=0,0,0,-0,-0,-0,0 +units=m +no_defs")
@@ -157,21 +80,16 @@ huc8_1_sp <- as(huc8_1, Class = "Spatial")
 class(huc8_1_sp) # "SpatialPolygonsDataFrame:"attr(,"package") "sp"
 huc8_1_split <- split(huc8_1, huc8_1$Name)
 list2env(huc8_1_split, envir = .GlobalEnv)
-
 class(Blue) # "sf" "data.frame"
 Blue # the projection is still correct from when we transformed it before
 Blue <- as(Blue, Class = "Spatial")
 
 # Bring in cropped NLCD data
 setwd("/Volumes/Blaszczak Lab/FSS/NLCD/NLCD_2016_Land_Cover_L48_20190424 (1)")
-nlcd_basins <- raster("GBCO_NLCD_masked_raster.tif")
+nlcd <- raster("GBCO_NLCD_masked_raster.tif")
 GDALinfo("GBCO_NLCD_masked_raster.tif")
 attributes(nlcd)
 # plot(nlcd)
-
-# huc8
-# nlcd
-# huc8 <- st_transform(huc8, crs = "+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs")
 
 # After bringing in NLCD data, continue to try to get this to work for 1 HUC8 watershed (Blue)
 nlcd_c_Blue <- crop(nlcd, Blue)
@@ -251,3 +169,77 @@ lapply(files, read_shp) # run with huc8_split[[1]], then do 2, 3, 4, 5. Had to g
 x <- files[10]
 read_shp(x)
 # 214 huc 8 watersheds (verify this)
+
+
+
+# Should be able to delete this part VVVVVVVVVVVVVVVVVVVVVV
+# Came from before combining all 3 basins to clip and mask
+#nlcd_14e <- extract(nlcd, basin14_sp) # takes way too long
+# class(nlcd_14)
+# plot(nlcd)
+# plot(basin14)
+# # Try for individual basins
+# nlcd_14c <- crop(nlcd, basin14_sp) # only takes a few minutes; I think it crops to the extent of the watershed
+# plot(nlcd_14c)
+# nlcd_14m <- mask(nlcd_14c, basin14_sp) # also only takes a few minutes
+# plot(nlcd_14m)
+#
+# nlcd_15c <- crop(nlcd, basin15_sp)
+# plot(nlcd_15c)
+# nlcd_15m <- mask(nlcd_15c, basin15_sp)
+# plot(nlcd_15m)
+#
+# nlcd_16c <- crop(nlcd, basin16_sp)
+# plot(nlcd_16c)
+# nlcd_16m <- mask(nlcd_16c, basin16_sp)
+# plot(nlcd_16m)
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# Should also be able to delete this: came before I wrote the function
+# VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+# huc8_2 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[2], "/WBDHU8.shp"))
+# huc8_3 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[3], "/WBDHU8.shp"))
+# huc8_4 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[4], "/WBDHU8.shp"))
+# huc8_5 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[5], "/WBDHU8.shp"))
+# huc8_6 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[6], "/WBDHU8.shp"))
+# huc8_7 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[7], "/WBDHU8.shp"))
+# huc8_8 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[8], "/WBDHU8.shp"))
+# huc8_9 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[9], "/WBDHU8.shp"))
+# huc8_10 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[10], "/WBDHU8.shp"))
+# huc8_11 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[11], "/WBDHU8.shp"))
+# huc8_12 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[12], "/WBDHU8.shp"))
+# huc8_13 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[13], "/WBDHU8.shp"))
+# huc8_14 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[14], "/WBDHU8.shp"))
+# huc8_15 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[15], "/WBDHU8.shp"))
+# huc8_16 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[16], "/WBDHU8.shp"))
+# huc8_17 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[17], "/WBDHU8.shp"))
+# huc8_18 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[18], "/WBDHU8.shp"))
+# huc8_19 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[19], "/WBDHU8.shp"))
+# huc8_20 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[20], "/WBDHU8.shp"))
+# huc8_21 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[21], "/WBDHU8.shp"))
+# huc8_22 <- st_read(paste0("/Volumes/Blaszczak Lab/FSS/NHD/", files[22], "/WBDHU8.shp"))
+
+# Need to transform all to correct CRS here
+
+# rm(files)
+# 
+# huc8 <- rbind(huc8_1, huc8_2)
+# huc8 <- rbind(huc8, huc8_3)
+# huc8 <- rbind(huc8, huc8_4)
+# huc8 <- rbind(huc8, huc8_5)
+# huc8 <- rbind(huc8, huc8_6)
+# huc8 <- rbind(huc8, huc8_7)
+# huc8 <- rbind(huc8, huc8_8)
+# huc8 <- rbind(huc8, huc8_9)
+# huc8 <- rbind(huc8, huc8_10)
+# huc8 <- rbind(huc8, huc8_11)
+# huc8 <- rbind(huc8, huc8_12)
+# huc8 <- rbind(huc8, huc8_13)
+# huc8 <- rbind(huc8, huc8_14)
+# huc8 <- rbind(huc8, huc8_15)
+# huc8 <- rbind(huc8, huc8_16)
+# huc8 <- rbind(huc8, huc8_17)
+# huc8 <- rbind(huc8, huc8_18)
+# huc8 <- rbind(huc8, huc8_19)
+# huc8 <- rbind(huc8, huc8_20)
+# huc8 <- rbind(huc8, huc8_21)
+# huc8 <- rbind(huc8, huc8_22)
