@@ -25,7 +25,7 @@ library(ggplot2)
 # basin14 <- st_read("/Volumes/Blaszczak Lab/FSS/NHD/NHD_H_1401_HU4_Shape/WBDHU2.shp")
 # basin15 <- st_read("/Volumes/Blaszczak Lab/FSS/NHD/NHD_H_1501_HU4_Shape/WBDHU2.shp")
 # basin16 <- st_read("/Volumes/Blaszczak Lab/FSS/NHD/NHD_H_1606_HU4_Shape/WBDHU2.shp")
-#
+# 
 # # Read in NLCD raster and learn some details about it
 # setwd("/Volumes/Blaszczak Lab/FSS/NLCD/NLCD_2016_Land_Cover_L48_20190424 (1)") # This is the full dataset for the CONUS
 # nlcd <- raster("NLCD_2016_Land_Cover_L48_20190424.img")
@@ -40,7 +40,7 @@ library(ggplot2)
 # basin14_sp <- as(basin14, Class = "Spatial")
 # # or: #basin14_sp <- sf::as_Spatial(basin14)
 # class(basin14_sp)
-
+# 
 # basin15 <- st_transform(basin15, crs = " +proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +ellps=WGS84 +towgs84=0,0,0,-0,-0,-0,0 +units=m +no_defs")
 # basin15_sp <- as(basin15, Class = "Spatial")
 # basin16 <- st_transform(basin16, crs = " +proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +ellps=WGS84 +towgs84=0,0,0,-0,-0,-0,0 +units=m +no_defs")
@@ -53,16 +53,16 @@ library(ggplot2)
 # basins_sp <- as(basins, Class = "Spatial")
 # 
 # # Try for all basins together
-# nlcd_c <- crop(nlcd, basins_sp)
+# nlcd_c <- crop(nlcd, basins_sp) #4 mins
 # plot(nlcd_c)
 # nlcd_m <- mask(nlcd_c, basins_sp)
-# plot(nlcd_m) # this takes a while, 10+ mins
+# plot(nlcd_m) # ~10 mins?
+# 
+# # writeRaster(nlcd_m, "GBCO_NLCD_masked_raster.img") # New raster file for NLCD clipped to all 3 HUC 2 basins together
+# # writeRaster(nlcd_m, "GBCO_NLCD_masked_raster.tif") # Try saving with a different format.
+# #                                                    # Using .img resulted in the @data@attributes being empty when the file was brought in later
+# writeRaster(nlcd_m, "GBCO_NLCD_masked_raster.grd") # .tif ended up not working either, .grd seems to work
 
-# writeRaster(nlcd_m, "GBCO_NLCD_masked_raster.img") # New raster file for NLCD clipped to all 3 HUC 2 basins together
-# writeRaster(nlcd_m, "GBCO_NLCD_masked_raster.tif") # Try saving with a different format.
-#                                                    # Using .img resulted in the @data@attributes being empty when the file was brought in later
-# nlcd2 <- raster("GBCO_NLCD_masked_raster.tif") # Saving as a .tif worked
-# rm(nlcd2)
 
 # Clip NLCD Data to HUC8 Watersheds ####
 # Create a function to do this for each of the smaller watersheds, I'm thinking HUC 8 since that is the level of HUC offered by our data
@@ -86,8 +86,8 @@ Blue # the projection is still correct from when we transformed it before
 Blue <- as(Blue, Class = "Spatial")
 # Bring in cropped NLCD data
 setwd("/Volumes/Blaszczak Lab/FSS/NLCD/NLCD_2016_Land_Cover_L48_20190424 (1)")
-nlcd <- raster("GBCO_NLCD_masked_raster.tif")
-GDALinfo("GBCO_NLCD_masked_raster.tif")
+nlcd <- raster("GBCO_NLCD_masked_raster.grd")
+GDALinfo("GBCO_NLCD_masked_raster.grd")
 attributes(nlcd)
 # plot(nlcd)
 # After bringing in NLCD data, continue to try to get this to work for 1 HUC8 watershed (Blue)
@@ -121,9 +121,9 @@ ggplot(huc8df)+
 # Once you are able to do this you can delete a lot of the stuff from above that is commented out
 
 setwd("/Volumes/Blaszczak Lab/FSS/NLCD/NLCD_2016_Land_Cover_L48_20190424 (1)")
-nlcd_basins <- raster("GBCO_NLCD_masked_raster.tif")
+nlcd_basins <- raster("GBCO_NLCD_masked_raster.grd")
 
-clip_pland <- function(x){
+clip_pland <- function(x,y){
   files <- list.files(path = '/Volumes/Blaszczak Lab/FSS/NHD', pattern = "NHD_H_")
   class(files)
   files <- as.list(files)
@@ -133,26 +133,60 @@ clip_pland <- function(x){
   huc8_sp <- as(huc8, Class = "Spatial")
   huc8_split <- split(huc8, huc8$Name)
   #list2env(huc8_1_split, envir = .GlobalEnv)
-  huc8_split[[17]] <- as(huc8_split[[17]], Class = "Spatial")
-  nlcd_c <- crop(nlcd_m, huc8_split[[17]])
-  nlcd_huc8 <- mask(nlcd_c, huc8_split[[17]])
+  huc8_split[[y]] <- as(huc8_split[[y]], Class = "Spatial") #* y or [[y]] and other numbers
+  nlcd_c <- crop(nlcd_basins, huc8_split[[y]]) #*
+  nlcd_huc8 <- mask(nlcd_c, huc8_split[[y]]) #*
+  nlcd_huc8e <- raster::extract(nlcd_huc8, huc8_split[[y]]) # ~ 2 mins #*
+  nlcd_huc8e2 <- as.data.frame(nlcd_huc8e[[y]]) #*
+  write.csv(nlcd_huc8e2, paste0("NLCD_rasterlist_", huc8_split[[y]]$HUC8, ".csv")) #*
+  colnames(nlcd_huc8e2)[1] <- "ID" 
+  nlcd_huc8e2 <- plyr::count(nlcd_huc8e2, vars = "ID")
+  dat <- nlcd_huc8e2 %>%
+    mutate(Class= recode(ID, 
+                         "11" = "Open Water",
+                         "12" = "Perennial Snow/Ice",
+                         "21" = "Developed, Open Space",
+                         "22" = "Developed, Low Intensity",
+                         "23" = "Developed, Medium Intensity",
+                         "24" = "Developed, High Intensity",
+                         "31" = "Barren Land",
+                         "41" = "Deciduous Forest",
+                         "42" = "Evergreen Forest",
+                         "43" = "Mixed Forest",
+                         "52" = "Shrub/Scrub",
+                         "71" = "Herbaceuous",
+                         "81" = "Hay/Pasture",
+                         "82" = "Cultivated Crops",
+                         "90" = "Woody Wetlands",
+                         "95" = "Emergent Herbaceuous Wetlands",
+                         .default = NULL
+                         ))
+  dat$PLAND <- (dat$freq/sum(dat$freq))*100
+  write.csv(dat, paste0("PLAND_huc_", huc8_split[[1]]$HUC8, ".csv")) #*
+  
+  
   #plot(nlcd_huc8)
   #class(nlcd_Blue)
-  writeRaster(nlcd_huc8, paste0("NLCD_huc_", huc8_split[[17]]$HUC8,".tif"), overwrite = TRUE)
+  # writeRaster(nlcd_huc8, paste0("NLCD_huc_", huc8_split[[1]]$HUC8,".tif"), overwrite = TRUE)
   
-  huc8df <- nlcd_huc8@data@attributes[[1]]
-  #sapply(huc8df, class)
-  #levels(huc8df$NLCD.Land.Cover.Class)
-  huc8df <- huc8df[-which(huc8df$NLCD.Land.Cover.Class == ""),]
-  huc8df <- huc8df[-which(huc8df$NLCD.Land.Cover.Class == "Unclassified"),]
-  huc8df$NLCD.Land.Cover.Class <- factor(huc8df$NLCD.Land.Cover.Class)
-  huc8df$PLAND <- (huc8df$COUNT/sum(huc8df$COUNT))*100
-  sum(huc8df$PLAND) # = 100
-  write.csv(huc8df, paste0("PLAND_huc_", huc8_split[[17]]$HUC8, ".csv"))
+  # huc8df <- huc8df@data@attributes[[1]]
+  # huc8df <- nlcd_huc8@data@attributes[[1]] # don't change this [[1]]
+  # #sapply(huc8df, class)
+  # #levels(huc8df$NLCD.Land.Cover.Class)
+  # huc8df <- huc8df[-which(huc8df$NLCD.Land.Cover.Class == ""),]
+  # huc8df <- huc8df[-which(huc8df$NLCD.Land.Cover.Class == "Unclassified"),]
+  # huc8df$NLCD.Land.Cover.Class <- factor(huc8df$NLCD.Land.Cover.Class)
+  # huc8df$PLAND <- (huc8df$COUNT/sum(huc8df$COUNT))*100
+  # sum(huc8df$PLAND) # = 100
+  # write.csv(huc8df, paste0("PLAND_huc_", huc8_split[[1]]$HUC8, ".csv"))
   
 }
-
-lapply(files, clip_pland) # run with huc8_split[[1]], then do 2, 3, 4, 5. Had to go through files manually for 6, as not all file groups had this many huc8 watersheds
+x <- files[5]
+y <- 2
+clip_pland(x,y) # took 8 mins
+lapply(files[1:10], clip_pland, y) # 4:17-4:31 to do files 1:5
+# run with huc8_split[[1]], then do 2, 3, 4, 5. Had to go through files manually for 6, as not all file groups had this many huc8 watersheds
+# just change  y rather than changing each number in brackets every time
 # [[7]] for files[4:16, 18:22]
 # [[8]] for files [6, 8:11, 13, 14, 18:22]
 # [[9]] for files [8:14, 18:22]
@@ -166,8 +200,6 @@ lapply(files, clip_pland) # run with huc8_split[[1]], then do 2, 3, 4, 5. Had to
 # [[17]] for files [10]
 # [[18]] for files [10]
 
-x <- files[10]
-clip_pland(x)
 # 214 huc 8 watersheds (verify this)
 
 
