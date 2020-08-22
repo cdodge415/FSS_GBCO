@@ -3,28 +3,30 @@ library(plyr)
 library(ggplot2)
 library(lubridate)
 ########################### Merge all daily and point USGS data and WQP data 
-# Format and merge daily USGS SC data and point USGS SC data ####
-setwd("~/Desktop/Blaszczak Lab/GB CO WQ Data/USGS Data Retrieval from Phil")
+# Format and merge USGS SC uv, dv, and qw data ####
+setwd("/Volumes/Blaszczak Lab/FSS/All Data")
 # daily data
-USGS_SCd <- readRDS("~/Desktop/Blaszczak Lab/GB CO WQ Data/USGS Data Retrieval from Phil/USGS_SC_all_daily_data.rds")
+USGS_dv <- readRDS("USGS_SC_dv_dqi.rds")
 # point data
-USGS_SCp <- readRDS("~/Desktop/Blaszczak Lab/GB CO WQ Data/USGS Data Retrieval from Phil/USGS_SC_qw_dqiAR.rds")
+USGS_qw <- readRDS("USGS_SC_qw_dqi.rds")
+# unit value (daily) data
+USGS_uv <- readRDS("USGS_SC_uv_daily_dqi.rds")
 
 colnames(USGS_SCp)
 # subset columns
 USGS_SCp <- select(USGS_SCp, c("site_no", "sample_dt", "sample_tm", "result_va"))
 
+# this next part should happen in the USGS_SC_qw_data_exploration script (before this)
 # see if we have duplicated data
-USGS_SCp$SiteDate <- paste(USGS_SCp$site_no,USGS_SCp$sample_dt, sep = " ")
-class(USGS_SCp$SiteDate)
-USGS_SCp$SiteDate <- as.factor(USGS_SCp$SiteDate)
-levels(USGS_SCp$SiteDate) # 55,196
-unique(USGS_SCp$SiteDate) # 55,196
-USGS_SCp_sub <- USGS_SCp
-USGS_SCp_sub <- USGS_SCp_sub[duplicated(USGS_SCp_sub[5]),] # look at these and confirm that there are days with multiple measurements
+USGS_qw$SiteDate <- paste(USGS_qw$site_no,USGS_qw$sample_dt, sep = " ")
+class(USGS_qw$SiteDate)
+USGS_qw$SiteDate <- as.factor(USGS_qw$SiteDate)
+levels(USGS_qw$SiteDate) # 55,196
+unique(USGS_qw$SiteDate) # 55,196
+USGS_qw_sub <- USGS_qw
+USGS_qw_sub <- USGS_qw_sub[duplicated(USGS_qw_sub[5]),] # look at these and confirm that there are days with multiple measurements
 # confirmed: we have days of point sampling where multiple samples were taken, so average by date to get daily data
-rm(USGS_SCp_sub)
-
+rm(USGS_qw_sub)
 USGS_SCpd <- USGS_SCp %>%
   group_by(site_no, sample_dt, SiteDate) %>%
   summarise_at(.vars = "result_va", .funs = c("mean"=mean))

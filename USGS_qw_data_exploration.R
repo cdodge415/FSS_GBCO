@@ -27,6 +27,24 @@ SC$SiteID <- as.factor(SC$SiteID)
 levels(SC$SiteID)
 # 46 qw sites
 
+# we need to see if there are days with multiple values and if they are, average them to get one value per day of sampling
+SC$SiteDate <- paste(SC$SiteID,SC$Date, sep = " ")
+class(SC$SiteDate)
+SC$SiteDate <- as.factor(SC$SiteDate)
+levels(SC$SiteDate) # 38,268
+unique(SC$SiteDate) # 38,268
+SC_sub <- SC
+SC_sub <- SC[duplicated(SC[7]),] # look at these and confirm that there are days with multiple measurements
+# confirmed: we have days of point sampling where multiple samples were taken, so average by date to get daily data
+rm(SC_sub)
+SC <- SC %>%
+  group_by(SiteDate) %>%
+  summarise_at(.vars = "Specific.conductance", .funs = c("mean"=mean))
+SC$mean <- round(SC$mean, digits = 0) # create a dataframe of data made from point data with no more than 1 value per day
+# I'm not feeling 100% confident that the mean function is working properly
+# For example, 09380000 1970-02-15 is a site date that shows up in duplicated. The two values are
+# 970 and 980 but the mean in the new df shows up as 973, not 975
+
 # write new file with naming convention of other data quality filtered files just to avoid confusion
 # even though we ended up keeping all of the data
 saveRDS(SC, "USGS_SC_qw_dqi.rds")
