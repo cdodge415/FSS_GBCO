@@ -12,70 +12,82 @@ USGS_qw <- readRDS("USGS_SC_qw_dqi.rds")
 # unit value (daily) data
 USGS_uv <- readRDS("USGS_SC_uv_daily_dqi.rds")
 
-colnames(USGS_SCp)
-# subset columns
-USGS_SCp <- select(USGS_SCp, c("site_no", "sample_dt", "sample_tm", "result_va"))
+# Get all df's into the same format, standardize column names
+dfs <- list(USGS_dv, USGS_qw, USGS_uv)
+lapply(dfs, colnames)
+rm(dfs)
+USGS_dv <- select(USGS_dv, c("SiteID", "DateTime", "Specific.Conductance"))
+colnames(USGS_dv) <- c("SiteID", "Date", "SpC")
+USGS_qw <- select(USGS_qw, c("SiteID", "Date", "mean"))
+colnames(USGS_qw) <- c("SiteID", "Date", "SpC")
+USGS_uv <- select(USGS_uv, c("SiteID", "Date", "Specific.Conductance"))
+colnames(USGS_uv) <- c("SiteID", "Date", "SpC")
 
-# this next part should happen in the USGS_SC_qw_data_exploration script (before this)
-# see if we have duplicated data
-USGS_qw$SiteDate <- paste(USGS_qw$site_no,USGS_qw$sample_dt, sep = " ")
-class(USGS_qw$SiteDate)
-USGS_qw$SiteDate <- as.factor(USGS_qw$SiteDate)
-levels(USGS_qw$SiteDate) # 55,196
-unique(USGS_qw$SiteDate) # 55,196
-USGS_qw_sub <- USGS_qw
-USGS_qw_sub <- USGS_qw_sub[duplicated(USGS_qw_sub[5]),] # look at these and confirm that there are days with multiple measurements
-# confirmed: we have days of point sampling where multiple samples were taken, so average by date to get daily data
-rm(USGS_qw_sub)
-USGS_SCpd <- USGS_SCp %>%
-  group_by(site_no, sample_dt, SiteDate) %>%
-  summarise_at(.vars = "result_va", .funs = c("mean"=mean))
-USGS_SCpd$mean <- round(USGS_SCpd$mean, digits = 0) # create a dataframe of data made from point data with no more than 1 value per day
-rm(USGS_SCp)
+USGS_dv$SiteDate <- paste(USGS_dv$SiteID, USGS_dv$Date, sep = " ")
+USGS_uv$SiteDate <- paste(USGS_uv$SiteID, USGS_uv$Date, sep = " ")
+USGS_qw$SiteDate <- paste(USGS_qw$SiteID, USGS_qw$Date, sep = " ")
 
-# combine daily data and point data
-# format the two dfs to be the same first
-colnames(USGS_SCpd)
-colnames(USGS_SCd)
-colnames(USGS_SCpd) <- c("SiteID", "Date", "SiteDate", "SpC")
-USGS_SCd <- select(USGS_SCd, -c("Site_Date"))
-USGS_SCd$SiteDate <- paste(USGS_SCd$SiteID, USGS_SCd$Date, sep = " ")
-USGS_SCd <- select(USGS_SCd, c("SiteID", "Date", "SiteDate", "SpC"))
-sapply(USGS_SCd, class)
-sapply(USGS_SCpd, class)
-USGS_SCpd$SiteID <- as.factor(USGS_SCpd$SiteID)
-USGS_SCd$SiteDate <- as.factor(USGS_SCd$SiteDate)
-class(USGS_SCd)
-class(USGS_SCpd)
-USGS_SCpd <- as.data.frame(USGS_SCpd)
-# now combine
-SC <- rbind(USGS_SCd, USGS_SCpd)
-rm(USGS_SCd, USGS_SCpd)
-class(SC$SiteID)
-SC$SiteID <- factor(SC$SiteID)
-levels(SC$SiteID)
-# now see what kind of site date overlaps we have between the point data and daily data
-# see if we have duplicated data
-levels(SC$SiteDate) # 358,098
-unique(SC$SiteDate) # 358, 098
-SC_sub <- SC
-SC_sub <- SC %>%
+sapply(USGS_dv, class)
+sapply(USGS_qw, class)
+sapply(USGS_uv, class)
+
+# confirm we don't have overlops of site-date's with the daily value data and the unit value data we aggregated into daily data
+dv_check <- USGS_dv
+uv_check <- USGS_uv
+qw_check <- USGS_qw
+
+overlap <- intersect(dv_check$SiteDate, uv_check$SiteDate) # empty (we made sure of this earlier)
+overlap1 <- intersect(dv_check$SiteDate, qw_check$SiteDate) # 6420
+print(overlap1) # if you copy/paste a site-date into the search bar of the two dfs, you'll see the values are close
+overlap2 <- intersect(uv_check$SiteDate, qw_check$SiteDate) # 76
+print(overlap2) # if you copy/paste a site-date into the search bar of the two dfs, you'll see the values are close
+
+# average overlaps or say that we used one set of data where overlaps occurred?
+# average: (bind, then group_by/summarise_at)
+class(dv_check)
+class(qw_check)
+qw_check <- as.data.frame(qw_check)
+dat_qwdv <- rbind(dv_check, qw_check, deparse.level = 1)
+dat_qwdv <- dat_qwdv %>%
   group_by(SiteID, Date, SiteDate) %>%
-  summarise_at(.vars = "SpC", .funs = c("mean"=mean))
-SC_sub$mean <- round(SC_sub$mean, digits = 0)
-SC <- SC_sub
-rm(SC_sub)
-SC$SiteID <- paste0("USGS-", SC$SiteID)
-colnames(SC)[4] <- "SpC"
-SC$SiteDate <- paste(SC$SiteID, SC$Date, sep = " ")
-USGS <- SC
-rm(SC)
+  summarise_at(.vars = "SpC", .funs = c("SpC" = mean))
+dat_qwdv$SpC <- round(dat_qwdv$SpC, digits = 0)
+# subset for only the site-dates that were overlapping
+dat_qwdv <- subset(dat_qwdv, SiteDate %in% overlap1) # 6420
+
+class(uv_check)
+uv_check <- as.data.frame(uv_check)
+dat_qwuv <- rbind(uv_check, qw_check, deparse.level = 1)
+dat_qwuv <- dat_qwuv %>%
+  group_by(SiteID, Date, SiteDate) %>%
+  summarise_at(.vars = "SpC", .funs = c("SpC" = mean))
+dat_qwuv$SpC <- round(dat_qwuv$SpC, digits = 0)
+# subset for only the site-dates that were overlapping
+dat_qwuv <- subset(dat_qwuv, SiteDate %in% overlap2) # 76
+
+# overlap <- intersect(dat_qwdv$SiteDate, dat_qwuv$SiteDate) # empty
+# now remove this data from qw, uv, and dv entirely
+USGS_qw1 <- USGS_qw[which(USGS_qw$SiteDate %in% overlap1),] # take the qw data that overlapped with dv
+USGS_qw2 <- USGS_qw[which(USGS_qw$SiteDate %in% overlap2),] # take the qw data that overlapped with uv
+USGS_qw_rm <- rbind(USGS_qw1, USGS_qw2) # combine into one df that represents what we want to remove from qw
+USGS_qw <- USGS_qw[-which(USGS_qw$SiteDate %in% USGS_qw_rm$SiteDate),] # subset
+
+USGS_dv <- USGS_dv[-which(USGS_dv$SiteDate %in% dat_qwdv$SiteDate),]
+USGS_uv <- USGS_uv[-which(USGS_uv$SiteDate %in% dat_qwuv$SiteDate),]
+
+USGS <- rbind_list(USGS_qw, USGS_dv, USGS_uv)
+duplicated <- dat[duplicated(dat[4]),] # none!
+unique(dat$SiteDate)
+
+rm(overlap, overlap1, overlap2, overlap3, uv_check, dv_check, qw_check, USGS_qw1, USGS_qw2, USGS_qw_rm, dat_qwdv, dat_qwu, duplicated)
+
+colnames(USGS)
+USGS$SiteID <- paste0("USGS-", USGS$SiteID)
 class(USGS$SiteID)
 USGS$SiteID <- factor(USGS$SiteID)
-levels(USGS$SiteID) # there are 179 sites with SC just from USGS daily and point measurements
-# SC is now all of the USGS data we will use
-# Now onto the WQP data
+levels(USGS$SiteID) # there are 159 sites with SC just from USGS 
 
+# Now onto the WQP data
 # Format WQP SC data and merge it with USGS SC data ####
 setwd("/Users/laurenbolotin/Desktop/Blaszczak Lab/GB CO WQ Data/WQP Formatted TS")
 WQ <- read.csv("WQ_SC_TS_final_sites.csv")
