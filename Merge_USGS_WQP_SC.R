@@ -86,11 +86,12 @@ USGS$SiteID <- paste0("USGS-", USGS$SiteID)
 class(USGS$SiteID)
 USGS$SiteID <- factor(USGS$SiteID)
 levels(USGS$SiteID) # there are 159 sites with SC just from USGS 
+saveRDS(USGS, "USGS_SC.rds")
 
 # Now onto the WQP data
 # Format WQP SC data and merge it with USGS SC data ####
 setwd("/Users/laurenbolotin/Desktop/Blaszczak Lab/GB CO WQ Data/WQP Formatted TS")
-WQ <- read.csv("WQ_SC_TS_final_sites.csv")
+WQ <- read.csv("WQ_TS_final_sites.csv")
 
 # let's just grab SC data for now
 colnames(WQ)
@@ -105,84 +106,59 @@ WQ$SpC <- round(WQ$SpC, digits = 0)
 
 # get this data into the same format as the USGS data
 WQ$Date <- date(WQ$DateTime)
+#WQ <- select(WQ, -c("DateTime"))
+
 WQ$SiteDateTime <- paste(WQ$SiteID, WQ$DateTime, sep = " ")
 
 WQ$SiteDateTime <- as.factor(WQ$SiteDateTime)
 levels(WQ$SiteDateTime) # 674,210 (out of a 674,969 row df)
 unique(WQ$SiteDateTime) # 674,210
-duplicated(WQ$SiteDateTime)
-# I need to understand this better
-WQ_sub <- WQ
-WQ_sub <- WQ_sub[duplicated(WQ_sub[5]),] # 759 obs. of duplicated data
-# you can check by looking at WQ_sub, copying a SiteDateTime, and searching it in WQ
-rm(WQ_sub)
+duplicated <- WQ[duplicated(WQ[5]),] # 692
 # Since we have duplicates, average across them
-WQ_sub <- WQ %>%
+
+WQ <- WQ %>%
   group_by(SiteID, DateTime, SiteDateTime) %>%
-  summarise_at(.vars = "SpC", .funs = c("mean"=mean))
-WQ_sub$mean <- round(WQ_sub$mean, digits = 0)
-WQ <- WQ_sub
-rm(WQ_sub)
+  summarise_at(.vars = "SpC", .funs = c("SpC"=mean))
+WQ$SpC <- round(WQ$SpC, digits = 0)
+
 class(WQ$SiteID)
 WQ$SiteID <- factor(WQ$SiteID)
-levels(WQ$SiteID) # Still 57, 222
-WQ <- select(WQ, -c("SiteDateTime")) # do we still need this?
+levels(WQ$SiteID) # Still 25,623
 WQ$Date <- date(WQ$DateTime)
-class(WQ)
+WQ <- select(WQ, -c("SiteDateTime")) # do we still need this?
 WQ <- as.data.frame(WQ)
-colnames(WQ)
-WQ <- select(WQ, -c("DateTime")) # Get rid of DateTime because we aren't looking at time. We have ensured no more than 1 value for each date
-WQ$SiteDate <- paste(WQ$SiteID, WQ$Date)
+WQ <- select(WQ, c("SiteID", "Date", "SpC"))
+WQ$SiteDate <- paste(WQ$SiteID, WQ$Date, sep = " ")
+
 colnames(USGS)
 colnames(WQ)
-WQ <- select(WQ, c("SiteID", "Date", "SiteDate", "mean"))
-colnames(WQ)[4] <- "SpC"
-class(WQ$SiteID)
-levels(WQ$SiteID) # Still 25,623 sites from WQP
+
 # Merge USGS and WQP SC data ####
 # The USGS and WQP SC data are now in the same format and can be combined
 class(USGS)
 class(WQ)
 USGS <- as.data.frame(USGS)
+USGS$Source <- "USGS"
+WQ$Source <- "WQP"
 SC <- rbind(USGS, WQ)
 
 sapply(SC, class)
-SC$SiteID <- as.factor(SC$SiteID)
 SC$SiteDate <- as.factor(SC$SiteDate)
-levels(SC$SiteID) # 25,624
-SC$SiteID <- factor(SC$SiteID)
-levels(SC$SiteDate) # 726,499 (out of a 814,880 row df)
-unique(SC$SiteDate)
-#duplicated(WQ$SiteDate)
-WQ_sub <- WQ_sub[duplicated(WQ_sub[5]),] # 759 obs. of duplicated data
-# you can check by looking at WQ_sub, copying a SiteDateTime, and searching it in WQ
-rm(WQ_sub)
-# I need to understand this better
-SC_sub <- SC
-SC_sub <- SC_sub[duplicated(SC_sub[3]),] # 175,900 obs. of duplicated data
-# wasn't this supposed to be taken care of already?
-SC_sub <- SC %>%
-  group_by(SiteID, Date, SiteDate) %>%
-  summarise_at(.vars = "SpC", .funs = c("SpC"=mean))
-SC_sub$SpC <- round(SC_sub$SpC, digits = 0)
-SC_sub_check <- SC_sub[duplicated(SC_sub[3]),] #now this is empty which means we have no duplicates
-rm(SC_sub_check)
+levels(SC$SiteDate) # 867,739 (out of a 899,857 row df)
+duplicated <- SC[duplicated(SC[4]),] # 32,118 obs. of duplicated data
 
-# Check that this method works
-colnames(SC)
-colnames(SC_sub)
-# comparison <- setdiff(SC, SC_sub) # What is in SC that is not in SC_sub? This is what we want to see. 
-# comparison2 <- setdiff(SC_sub, SC) # What is in SC_sub that is not in SC?
-rm(comparison, comparison2, USGS, WQ)
-raw <- SC
-SC <- SC_sub  
-rm(SC_sub)
+SC <- SC %>%
+  group_by(SiteID, Date, SiteDate, Source) %>%
+  summarise_at(.vars = "SpC", .funs = c("SpC"=mean))
+SC$SpC <- round(SC$SpC, digits = 0)
+SC_check <- SC[duplicated(SC[3]),] #now this is empty which means we have no duplicates
+rm(SC_check)
 
 class(SC$SiteID)
 SC$SiteID <- factor(SC$SiteID)
-levels(SC$SiteID) # Final number of sites from all sources is 57,223
+levels(SC$SiteID) # Final number of sites from all sources is 25,624
 
 
 # Output this new, combined data
-setwd("~/Desktop/Blaszczak Lab/GB CO WQ Data/Finalized TS (All Sources)")
+setwd("/Volumes/Blaszczak Lab/FSS/All Data")
 saveRDS(SC, "all_SC_data.rds")
