@@ -6,7 +6,8 @@
 
 # Set working directory and bring in data:
 setwd("~/Desktop/Blaszczak Lab/GB CO WQ Data/WQP Formatted TS")
-TS <- read.csv("WQ_TS.csv") # 64,130 (see if you can go back and see if this matches the metadata before it is filtered for lotic sites)
+# before formatting the TS there were 69,735 sites
+TS <- read.csv("WQ_TS.csv") # 64,130 after formatting the TS
 class(TS$SiteID)
 levels(TS$SiteID)
 
@@ -21,4 +22,4 @@ TS_sub <- subset(TS, TS$SiteID %in% meta$SiteID)
 
 # Output a csv with just the SC data:
 setwd("~/Desktop/Blaszczak Lab/GB CO WQ Data/WQP Formatted TS")
-write.csv(TS_sub, "WQ_SC_TS_final_sites.csv")
+write.csv(TS_sub, "WQ_TS_final_sites.csv")
