@@ -92,7 +92,7 @@ rm(heatmap, sub_heatmap)
 SC_sub$MonthAbb <- month.abb[SC_sub$Month]
 SC_sub$MonthAbb = factor(SC_sub$MonthAbb, levels = month.abb)
 barplot(table(SC_sub$MonthAbb))
-rm(heatmap, sub_heatmap, SC_per_month, SC_per_sy) # save space/make things move faster
+rm(heatmap, sub_heatmap, SC_per_month) # save space/make things move faster
 
 # SUMMARY STATS ####
 getmode <- function(v) { # create function to get the mode
@@ -107,29 +107,54 @@ tm <- function(x){ # create function for 25% trimmed mean
 iqr <- function(x){ # create function for IQr type 6
   IQR(x, type = 6)
 }
-
+# summary statistics by site (all sites)
 SS <- SC %>%
   group_by(SiteID) %>%
   summarise_at(.vars = "SpC", .funs = c("min" = min, "max"=max, "mean"=mean, "mode"=getmode, "median"=median, "sd"=sd, "tm"=tm, "IQR"=iqr))
 SS$range <- SS$max-SS$min
 SS$cv <- SS$sd/SS$mean
 
+# summary statistics by site (subset of sites with at least monthly measurements)
 SSsub <- SC_sub %>%
   group_by(SiteID) %>%
   summarise_at(.vars = "SpC", .funs = c("min" = min, "max"=max, "mean"=mean, "mode"=getmode, "median"=median, "sd"=sd, "tm"=tm, "IQR"=iqr))
 SSsub$range <- SSsub$max-SSsub$min
 SSsub$cv <- SSsub$sd/SSsub$mean
 
-# CV ####
+# summary statistics by site-year (subset)
+SSsubSY <- SC_sub %>%
+  group_by(SiteID, Year) %>%
+  summarise_at(.vars = "SpC", .funs = c("min" = min, "max"=max, "mean"=mean, "mode"=getmode, "median"=median, "sd"=sd, "tm"=tm, "IQR"=iqr))
+SSsubSY$range <- SSsubSY$max-SSsubSY$min
+SSsubSY$cv <- SSsubSY$sd/SSsubSY$mean
+
+# VARIABILITY ####
+# cv ####
+# by site
 ggplot(SSsub, aes(x=cv, fill=NULL)) +
-  geom_histogram(binwidth=.1, alpha=.5, position="identity", colour = "black")+
+  labs(title = "Coefficient of Variation by SiteID", x = "CV", y = "# of Sites")+
+  geom_histogram(binwidth=.1, alpha=.5, position="identity", colour = "black", fill = "lightseagreen")+
   theme_classic()+
   xlim(0,2)+
-  geom_vline(aes(xintercept=mean(cv, na.rm=T)),
-             color="red", linetype="dashed", size=1)
+  geom_vline(aes(xintercept=mean(cv, na.rm=T)), color="red", linetype="dashed", size=1)+
+  scale_y_continuous(expand = c(NA, 0), limits = c(0, 400))+
+  scale_x_continuous(expand = c(0, NA), limits = c(0, 2))+
+  theme(plot.margin=unit(c(0.5,1,0.5,0.5),"cm"))+
+  theme(plot.title = element_text(hjust = 0.5))
+# by site-year
+ggplot(SSsubSY, aes(x=cv, fill=NULL)) +
+  labs(title = "Coefficient of Variation by Site-Year", x = "CV", y = "# of Site-Years")+
+  geom_histogram(binwidth=.1, alpha=.5, position="identity", colour = "black", fill = "lightseagreen")+
+  theme_classic()+
+  xlim(0,2)+
+  geom_vline(aes(xintercept=mean(cv, na.rm=T)), color="red", linetype="dashed", size=1)+
+  scale_y_continuous(expand = c(NA, 0), limits = c(0, 2300))+
+  scale_x_continuous(expand = c(0, NA), limits = c(0, 2))+
+  theme(plot.margin=unit(c(0.5,1,0.5,0.5),"cm"))+
+  theme(plot.title = element_text(hjust = 0.5))
 
 # TIMING/ANNUAL TRENDS ####
-# MODE ####
+# Mode ####
 # MAX SC_sub timing
 # find out what month of the year the maximum SC_sub occurs for each site-year
 monthly_max <- SC_sub %>% 
@@ -171,7 +196,7 @@ annual_avg_min_count$mode = factor(annual_avg_min_count$mode, levels = month.abb
 ggplot(annual_avg_min_count)+
   geom_col(mapping = aes(x = mode, y = freq))+theme_classic()
 
-# MEAN ####
+# Mean ####
 # Max SC_sub
 # take averages of all years
 annual_avg_max <- monthly_max %>% # take averages of month of peak SC_sub for all years for each site
@@ -195,7 +220,7 @@ annual_avg_min_count$mean = factor(annual_avg_min_count$mean, levels = month.abb
 ggplot(annual_avg_min_count)+
   geom_col(mapping = aes(x = mean, y = freq))
 
-# ROLLING MEAN ####
+# Rolling Mean ####
 # Perhaps by looking at a 7-day average and then finding max and mins, we can dampen noisy data
 # This is probably only applicable to the actual daily resolution data (~365 obs. per year), so create a new subset of data
 # Mode (of rolling mean) ####
@@ -266,120 +291,6 @@ annual_avg_min_count$mean = factor(annual_avg_min_count$mean, levels = month.abb
 ggplot(annual_avg_min_count)+
   geom_col(mapping = aes(x = mean, y = freq))
 
-
-# VARIABILITY by MONTH ####
-# SC_sub ####
-# by month # NOTE: I'm not sure it makes much sense to look at variability this way...
-# SC_sub_monthly <- SC_sub %>%
-#   group_by(Month) %>% 
-#   summarise_at(.vars = "SpC", .funs = c("min" = min, "max" = max, "sd" = sd, "mean" = mean))
-# SC_sub_monthly$range <- SC_sub_monthly$max-SC_sub_monthly$min
-# SC_sub_monthly$cv <- SC_sub_monthly$sd/SC_sub_monthly$mean
-# SC_sub_monthly$Month <- month.abb[SC_sub_monthly$Month]
-# SC_sub_monthly$Month = factor(SC_sub_monthly$Month, levels = month.abb)
-# ggplot(SC_sub_monthly)+
-#   geom_col(mapping = aes(x = Month, y = cv))
-# ggplot(SC_sub_monthly)+
-#   geom_col(mapping = aes(x = Month, y = range))
-
-# by site-month
-# subset further to only include months with >= 4 obs. per month 
-# We are ASSUMING this implies a weekly sampling
-SC_per_sym <- plyr::count(SC, vars = c("SiteID", "Year", "Month")) 
-SC_per_sym$SiteYearMonth <- paste0(SC_per_sym$SiteID, "_", SC_per_sym$Year, "_", SC_per_sym$Month)
-# add site-year-month to the full dataset
-SC$SiteYearMonth <- paste(SC$SiteID, SC$Year, SC$Month, sep = "_")
-
-# SC_sub2 = a subset of data:
-# try filtering data for >= 4 data points per site-year-month (so in a specific month of any given year, must have >= 4 obs.)
-# We are ASSUMING that this implies a monthly sampling ####
-SC_sub2 <- SC_per_sym[which(SC_per_sym$freq >= 4),] 
-SC_sub2 <- SC[which(SC$SiteYearMonth %in% SC_sub2$SiteYearMonth),] 
-SC_sub2$SiteYearMonth <- as.factor(SC_sub2$SiteYearMonth)
-SC_sub2$SiteYearMonth <- factor(SC_sub2$SiteYearMonth) # get rid of unused levels by re-factoring
-SC_sub2$SiteID <- factor(SC_sub2$SiteID) # get rid of unused levels by re-factoring
-# levels(SC_sub2$SiteYearMonth) # 21,987 site-year-months
-# levels(SC_sub2$SiteID) # 928 sites
-# 356,316 observations
-SC_sub2_monthly <- SC_sub2 %>%
-  group_by(SiteID, Year, Month) %>% 
-  summarise_at(.vars = "SpC", .funs = c("min" = min, "max" = max, "sd" = sd, "mean" = mean, "IQR"=iqr, "tm"=tm))
-SC_sub2_monthly$range <- SC_sub2_monthly$max-SC_sub2_monthly$min
-SC_sub2_monthly$cv <- SC_sub2_monthly$sd/SC_sub2_monthly$mean
-SC_sub2_monthly$Month <- month.abb[SC_sub2_monthly$Month]
-SC_sub2_monthly$Month = factor(SC_sub2_monthly$Month, levels = month.abb)
-ggplot(SC_sub2_monthly)+
-  geom_col(mapping = aes(x = Month, y = cv))
-ggplot(SC_sub2_monthly)+
-  geom_col(mapping = aes(x = Month, y = range))
-# this is better because each month in time at each site is given = weight
-# summarize cv by month
-SC_sub2_monthly <- SC_sub2_monthly[complete.cases(SC_sub2_monthly), ]
-SC_sub2_cv <- SC_sub2_monthly %>%
-  group_by(Month) %>%
-  summarise_at(.vars = "cv", .funs = c("min" = min, "max" = max, "mean" = mean))
-SC_sub2_cv$mean <- round(SC_sub2_cv$mean, digits = 2)
-ggplot(SC_sub2_cv)+
-  geom_col(mapping = aes(x = Month, y = mean))
-
-SC_sub2_range <- SC_sub2_monthly %>%
-  group_by(Month) %>%
-  summarise_at(.vars = "range", .funs = c("min" = min, "max" = max, "mean" = mean, "median" = median))
-
-SC_sub2_iqr <- SC_sub2_monthly %>%
-  group_by(Month) %>%
-  summarise_at(.vars = "IQR", .funs = c("min" = min, "max" = max, "mean" = mean, "median" = median))
-
-# by site
-SC_sub_monthly <- SC_sub %>%
-  group_by(SiteID) %>% 
-  summarise_at(.vars = c("SpC"), .funs = c("min" = min, "max" = max, "sd" = sd, "mean" = mean))
-SC_sub_monthly$range <- SC_sub_monthly$max-SC_sub_monthly$min
-SC_sub_monthly$cv <- SC_sub_monthly$sd/SC_sub_monthly$mean
-#SC_sub_monthly$Month <- month.abb[SC_sub_monthly$Month]
-#SC_sub_monthly$Month = factor(SC_sub_monthly$Month, levels = month.abb)
-cv <-
-  ggplot(SC_sub_monthly, aes(x = cv))
-cv + geom_density(aes(y = ..count..), fill = "lightgray") +
-  geom_vline(aes(xintercept = mean(cv)), 
-             linetype = "dashed", size = 0.6,
-             color = "#FC4E07")
-
-# SC ####
-# all sites by month
-# SC_sub_monthly <- SC_sub %>%
-#   group_by(Month) %>% 
-#   summarise_at(.vars = "SpC", .funs = c("min" = min, "max" = max, "sd" = sd, "mean" = mean))
-# SC_sub_monthly$range <- SC_sub_monthly$max-SC_sub_monthly$min
-# SC_sub_monthly$cv <- SC_sub_monthly$sd/SC_sub_monthly$mean
-# SC_sub_monthly$Month <- month.abb[SC_sub_monthly$Month]
-# SC_sub_monthly$Month = factor(SC_sub_monthly$Month, levels = month.abb)
-# ggplot(SC_sub_monthly)+
-#   geom_col(mapping = aes(x = Month, y = cv))
-# ggplot(SC_sub_monthly)+
-#   geom_col(mapping = aes(x = Month, y = range))
-
-# by site-month
-# SC_sub_monthly <- SC_sub %>%
-#   group_by(SiteID, Month) %>% 
-#   summarise_at(.vars = "SpC", .funs = c("min" = min, "max" = max, "sd" = sd, "mean" = mean))
-# SC_sub_monthly$range <- SC_sub_monthly$max-SC_sub_monthly$min
-# SC_sub_monthly$cv <- SC_sub_monthly$sd/SC_sub_monthly$mean
-# SC_sub_monthly$Month <- month.abb[SC_sub_monthly$Month]
-# SC_sub_monthly$Month = factor(SC_sub_monthly$Month, levels = month.abb)
-# ggplot(SC_sub_monthly)+
-#   geom_col(mapping = aes(x = Month, y = cv))
-# ggplot(SC_sub_monthly)+
-#   geom_col(mapping = aes(x = Month, y = range))
-# 
-# # by site
-# SC_sub_monthly <- SC_sub %>%
-#   group_by(SiteID) %>% 
-#   summarise_at(.vars = c("SpC"), .funs = c("min" = min, "max" = max, "sd" = sd, "mean" = mean))
-# SC_sub_monthly$range <- SC_sub_monthly$max-SC_sub_monthly$min
-# SC_sub_monthly$cv <- SC_sub_monthly$sd/SC_sub_monthly$mean
-## SC_sub_monthly$Month <- month.abb[SC_sub_monthly$Month]
-## SC_sub_monthly$Month = factor(SC_sub_monthly$Month, levels = month.abb)
 
 
 # MAPPING ####
