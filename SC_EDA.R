@@ -58,34 +58,49 @@ SC_sub <- SC_per_sy[which(SC_per_sy$freq >= 12),]
 SC_sub <- SC[which(SC$SiteYear %in% SC_sub$SiteYear),] 
 SC_sub$SiteYear <- factor(SC_sub$SiteYear) # get rid of unused levels by re-factoring
 SC_sub$SiteID <- factor(SC_sub$SiteID) 
-# levels (SC_sub$SiteYear) # 8872 site-years
-# levels(SC_sub$SiteID) # 1603 sites
-# 593,590 observations
+# levels (SC_sub$SiteYear)
+# levels(SC_sub$SiteID) # 8872 site-years, 1603 sites, 593,590 observations
 
-# Filter data for >= 52 data points per year
-# We are ASSUMING that this implies a weekly sampling
-# SC_sub_w <- SC_per_sy[which(SC_per_sy$freq >= 52),] 
-# SC_sub_w <- SC[which(SC$SiteYear %in% SC_sub_w$SiteYear),] 
-# SC_sub_w$SiteYear <- factor(SC_sub_w$SiteYear) # get rid of unused levels by re-factoring
-# SC_sub_w$SiteID <- factor(SC_sub_w$SiteID) # get rid of unused levels by re-factoring
+# SC_continuous = site-years with >= 350 measurements
+SC_continuous <- SC_per_sy[which(SC_per_sy$freq >= 350),] # 517 site-years
+SC_continuous$SiteID <- factor(SC_continuous$SiteID)
+levels(SC_continuous$SiteID) # 93 sites
+SC_continuous <- SC[which(SC$SiteYear %in% SC_continuous$SiteYear),]
+SC_cont_POR <- SC_continuous %>%
+  count(c("SiteID", "Year"))
+
+check <- SC_continuous[which(SC_continuous$SiteYear == "USGS-09041400_2005"),]
+duplicated <- check[duplicated(check[2]),] # we haven't made sure that USGS and WQP data doesnt overlap, apparently
+
+
+ggplot(SSsub, aes(x=cv, fill=NULL)) +
+  labs(title = "Coefficient of Variation by SiteID", x = "CV", y = "# of Sites")+
+  geom_histogram(binwidth=.1, alpha=.5, position="identity", colour = "black", fill = "lightseagreen")+
+  theme_classic()+
+  xlim(0,2)+
+  geom_vline(aes(xintercept=mean(cv, na.rm=T)), color="red", linetype="dashed", size=1)+
+  scale_y_continuous(expand = c(NA, 0), limits = c(0, 400))+
+  scale_x_continuous(expand = c(0, NA), limits = c(0, 2))+
+  theme(plot.margin=unit(c(0.5,1,0.5,0.5),"cm"))+
+  theme(plot.title = element_text(hjust = 0.5))
 
 # Heat map to look just at years of data available in the raw data and the subset
-heatmap <- ggplot(SC, aes(x = Year, y = SiteID)) + 
-  geom_tile(color = "red")+
-  theme(axis.text.y=element_blank())+
-  xlim(1900,2020)
-sub_heatmap <- ggplot(SC_sub, aes(x = Year, y = SiteID)) + 
-  geom_tile(color = "red")+
-  theme(axis.text.y=element_blank())+
-  xlim(1900,2020)
-#subw_heatmap <- ggplot(SC_sub_w, aes(x = Year, y = SiteID)) + 
-  # geom_tile(color = "red")+
-  # theme(axis.text.y=element_blank())+
-  # xlim(1900,2020)
-print(heatmap)
-print(sub_heatmap)
-#print(subw_heatmap)
-rm(heatmap, sub_heatmap)
+# heatmap <- ggplot(SC, aes(x = Year, y = SiteID)) + 
+#   geom_tile(color = "red")+
+#   theme(axis.text.y=element_blank())+
+#   xlim(1900,2020)
+# sub_heatmap <- ggplot(SC_sub, aes(x = Year, y = SiteID)) + 
+#   geom_tile(color = "red")+
+#   theme(axis.text.y=element_blank())+
+#   xlim(1900,2020)
+# subw_heatmap <- ggplot(SC_sub_w, aes(x = Year, y = SiteID)) +
+# geom_tile(color = "red")+
+# theme(axis.text.y=element_blank())+
+# xlim(1900,2020)
+# print(heatmap)
+# print(sub_heatmap)
+# #print(subw_heatmap)
+# rm(heatmap, sub_heatmap)
 
 # SC_sub_per_month <- plyr::count(SC_sub, vars = "Month")
 # We have evened out the the number of measurements in each month a bit
