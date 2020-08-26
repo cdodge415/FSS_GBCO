@@ -120,10 +120,13 @@ SSsub <- SC_sub %>%
 SSsub$range <- SSsub$max-SSsub$min
 SSsub$cv <- SSsub$sd/SSsub$mean
 
-
-ggplot(SSsub, aes(x = cv))+
-  geom_density(fill = "gray")+
-  theme_classic()
+# CV ####
+ggplot(SSsub, aes(x=cv, fill=NULL)) +
+  geom_histogram(binwidth=.1, alpha=.5, position="identity", colour = "black")+
+  theme_classic()+
+  xlim(0,2)+
+  geom_vline(aes(xintercept=mean(cv, na.rm=T)),
+             color="red", linetype="dashed", size=1)
 
 # TIMING/ANNUAL TRENDS ####
 # MODE ####
@@ -146,7 +149,8 @@ annual_avg_max_count <- plyr::count(annual_avg_max, vars = "mode") # choose whic
 annual_avg_max_count$mode <- month.abb[annual_avg_max_count$mode]
 annual_avg_max_count$mode = factor(annual_avg_max_count$mode, levels = month.abb)
 ggplot(annual_avg_max_count)+
-  geom_col(mapping = aes(x = mode, y = freq))
+  geom_col(mapping = aes(x = mode, y = freq))+theme_classic()
+
 # MIN SC_sub
 # follow procedure for minimum SC_sub
 monthly_min <- SC_sub %>%
@@ -165,7 +169,7 @@ annual_avg_min_count <- plyr::count(annual_avg_min, vars = "mode")
 annual_avg_min_count$mode <- month.abb[annual_avg_min_count$mode]
 annual_avg_min_count$mode = factor(annual_avg_min_count$mode, levels = month.abb)
 ggplot(annual_avg_min_count)+
-  geom_col(mapping = aes(x = mode, y = freq))
+  geom_col(mapping = aes(x = mode, y = freq))+theme_classic()
 
 # MEAN ####
 # Max SC_sub
