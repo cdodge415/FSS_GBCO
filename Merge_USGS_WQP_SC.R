@@ -23,6 +23,7 @@ colnames(USGS_qw) <- c("SiteID", "Date", "SpC")
 USGS_uv <- select(USGS_uv, c("SiteID", "Date", "Specific.Conductance"))
 colnames(USGS_uv) <- c("SiteID", "Date", "SpC")
 
+
 USGS_dv$SiteDate <- paste(USGS_dv$SiteID, USGS_dv$Date, sep = " ")
 USGS_uv$SiteDate <- paste(USGS_uv$SiteID, USGS_uv$Date, sep = " ")
 USGS_qw$SiteDate <- paste(USGS_qw$SiteID, USGS_qw$Date, sep = " ")
@@ -76,8 +77,8 @@ USGS_dv <- USGS_dv[-which(USGS_dv$SiteDate %in% dat_qwdv$SiteDate),]
 USGS_uv <- USGS_uv[-which(USGS_uv$SiteDate %in% dat_qwuv$SiteDate),]
 
 USGS <- rbind_list(USGS_qw, USGS_dv, USGS_uv)
-duplicated <- dat[duplicated(dat[4]),] # none!
-unique(dat$SiteDate)
+duplicated <- USGS[duplicated(USGS[4]),] # none!
+unique(USGS$SiteDate)
 
 rm(overlap, overlap1, overlap2, overlap3, uv_check, dv_check, qw_check, USGS_qw1, USGS_qw2, USGS_qw_rm, dat_qwdv, dat_qwu, duplicated)
 
@@ -86,6 +87,8 @@ USGS$SiteID <- paste0("USGS-", USGS$SiteID)
 class(USGS$SiteID)
 USGS$SiteID <- factor(USGS$SiteID)
 levels(USGS$SiteID) # there are 159 sites with SC just from USGS 
+USGS <- select(USGS, -c("SiteDate"))
+USGS$SiteDate <- paste(USGS$SiteID, USGS$Date, sep = " ") 
 saveRDS(USGS, "USGS_SC.rds")
 rm(dat_qwuv, USGS_dv, USGS_qw, USGS_uv)
 # Now onto the WQP data
@@ -145,13 +148,15 @@ sapply(SC, class)
 SC$SiteDate <- as.factor(SC$SiteDate)
 levels(SC$SiteDate) # 867,739 (out of a 899,857 row df)
 
-dup <- SC[duplicated(SC[4]),] # none
-# I find it surprising that we don't have USGS site-dates that overlap with WQP site dates, but that really seems to be the case after some investigation
+duplicated <- SC[duplicated(SC[4]),] # 37,136 duplicated site-dates, looks like WQP data that is a duplicate of USGS
+# let's just use USGS data in this case, so remove these site dates of WQP data from the combined dataset
+SC <- setdiff(SC, duplicated) # takes the data from SC that is not in duplicated
 
 class(SC$SiteID)
 SC$SiteID <- factor(SC$SiteID)
 levels(SC$SiteID) # Final number of sites from all sources is 25,624
 
+duplicated <- SC[duplicated(SC[4]),] # none!
 
 # Output this new, combined data
 setwd("/Volumes/Blaszczak Lab/FSS/All Data")
