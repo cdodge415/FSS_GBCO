@@ -87,7 +87,7 @@ class(USGS$SiteID)
 USGS$SiteID <- factor(USGS$SiteID)
 levels(USGS$SiteID) # there are 159 sites with SC just from USGS 
 saveRDS(USGS, "USGS_SC.rds")
-
+rm(dat_qwuv, USGS_dv, USGS_qw, USGS_uv)
 # Now onto the WQP data
 # Format WQP SC data and merge it with USGS SC data ####
 setwd("/Users/laurenbolotin/Desktop/Blaszczak Lab/GB CO WQ Data/WQP Formatted TS")
@@ -108,30 +108,29 @@ WQ$SpC <- round(WQ$SpC, digits = 0)
 WQ$Date <- date(WQ$DateTime)
 #WQ <- select(WQ, -c("DateTime"))
 
-WQ$SiteDateTime <- paste(WQ$SiteID, WQ$DateTime, sep = " ")
+WQ$SiteDate <- paste(WQ$SiteID, WQ$Date, sep = " ")
 
-WQ$SiteDateTime <- as.factor(WQ$SiteDateTime)
-levels(WQ$SiteDateTime) # 674,210 (out of a 674,969 row df)
-unique(WQ$SiteDateTime) # 674,210
-duplicated <- WQ[duplicated(WQ[5]),] # 692
-# Since we have duplicates, average across them
+WQ$SiteDate <- as.factor(WQ$SiteDate)
+levels(WQ$SiteDate) # 424,664 (out of a 457,474 row df)
+unique(WQ$SiteDate) # 424,664
+duplicated <- WQ[duplicated(WQ[5]),] # 32,810 (reminder that this does not include the first occurrence of each SiteDate)
+# Since we have duplicates, average across them to get =< 1 value/day
 
 WQ <- WQ %>%
-  group_by(SiteID, DateTime, SiteDateTime) %>%
+  group_by(SiteID, Date, SiteDate) %>%
   summarise_at(.vars = "SpC", .funs = c("SpC"=mean))
 WQ$SpC <- round(WQ$SpC, digits = 0)
 
+class(WQ)
+WQ <- as.data.frame(WQ)
 class(WQ$SiteID)
 WQ$SiteID <- factor(WQ$SiteID)
 levels(WQ$SiteID) # Still 25,623
-WQ$Date <- date(WQ$DateTime)
-WQ <- select(WQ, -c("SiteDateTime")) # do we still need this?
-WQ <- as.data.frame(WQ)
-WQ <- select(WQ, c("SiteID", "Date", "SpC"))
-WQ$SiteDate <- paste(WQ$SiteID, WQ$Date, sep = " ")
+duplicated <- WQ[duplicated(WQ[3]),] # none!
 
 colnames(USGS)
 colnames(WQ)
+WQ <- select(WQ, c("SiteID", "Date", "SpC", "SiteDate"))
 
 # Merge USGS and WQP SC data ####
 # The USGS and WQP SC data are now in the same format and can be combined
@@ -145,14 +144,9 @@ SC <- rbind(USGS, WQ)
 sapply(SC, class)
 SC$SiteDate <- as.factor(SC$SiteDate)
 levels(SC$SiteDate) # 867,739 (out of a 899,857 row df)
-duplicated <- SC[duplicated(SC[4]),] # 32,118 obs. of duplicated data
 
-SC <- SC %>%
-  group_by(SiteID, Date, SiteDate, Source) %>%
-  summarise_at(.vars = "SpC", .funs = c("SpC"=mean))
-SC$SpC <- round(SC$SpC, digits = 0)
-SC_check <- SC[duplicated(SC[3]),] #now this is empty which means we have no duplicates
-rm(SC_check)
+dup <- SC[duplicated(SC[4]),] # none
+# I find it surprising that we don't have USGS site-dates that overlap with WQP site dates, but that really seems to be the case after some investigation
 
 class(SC$SiteID)
 SC$SiteID <- factor(SC$SiteID)
