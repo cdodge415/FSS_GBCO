@@ -59,46 +59,80 @@ SC_sub <- SC[which(SC$SiteYear %in% SC_sub$SiteYear),]
 SC_sub$SiteYear <- factor(SC_sub$SiteYear) # get rid of unused levels by re-factoring
 SC_sub$SiteID <- factor(SC_sub$SiteID) 
 # levels (SC_sub$SiteYear)
-# levels(SC_sub$SiteID) # 8872 site-years, 1603 sites, 593,590 observations
+# levels(SC_sub$SiteID) # 8872 site-years, 1603 sites, 552,496 observations
 
 # SC_continuous = site-years with >= 350 measurements
 SC_continuous <- SC_per_sy[which(SC_per_sy$freq >= 350),] # 517 site-years
 SC_continuous$SiteID <- factor(SC_continuous$SiteID)
 levels(SC_continuous$SiteID) # 93 sites
 SC_continuous <- SC[which(SC$SiteYear %in% SC_continuous$SiteYear),]
+class(SC_continuous$Year)
+SC_continuous$Year <- as.factor(SC_continuous$Year)
+
 SC_cont_POR <- SC_continuous %>%
-  count(c("SiteID", "Year"))
+  group_by(SiteID, Year) %>%
+  summarise_at(.vars = "SpC", .funs = c("mean" = mean))
 
-check <- SC_continuous[which(SC_continuous$SiteYear == "USGS-09041400_2005"),]
-duplicated <- check[duplicated(check[2]),] # we haven't made sure that USGS and WQP data doesnt overlap, apparently
+SC_cont_POR$PORadd <- "1"
+SC_cont_POR$PORadd <- as.numeric(SC_cont_POR$PORadd)
+SC_cont_POR <- as.data.frame(SC_cont_POR)
+SC_cont_POR <- SC_cont_POR %>%
+  group_by(SiteID) %>%
+  summarise_at(.vars = "PORadd", .funs = c("Years_cont" = sum))
+# 88 sites with continuous data  (what happened to 93?)
+library(tidyverse)
+SC_cont_POR$Years_cont <- as.factor(SC_cont_POR$Years_cont)
+print(paste(levels(SC_cont_POR$Years_cont)))
+count(SC_cont_POR$Years_cont)
+x <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 19, 21, 24)
+y <- c(26, 12, 7, 6, 1, 5, 5, 4, 3, 6, 1, 2, 3, 2, 2, 1, 1, 1)
+x_name <- "n_years"
+y_name <- "n_occurrences"
+cont <- data.frame(x,y)
+names(cont) <- c(x_name,y_name)
 
-
-ggplot(SSsub, aes(x=cv, fill=NULL)) +
-  labs(title = "Coefficient of Variation by SiteID", x = "CV", y = "# of Sites")+
-  geom_histogram(binwidth=.1, alpha=.5, position="identity", colour = "black", fill = "lightseagreen")+
+ggplot(cont, aes(x=n_years, y = n_occurrences)) +
+  labs(title = "Continuous SC Data", x = "# of Years", y = "# of Sites", subtitle = "n = 88 sites")+
+  geom_col(alpha=.5, position="identity", colour = NA, fill = "lightseagreen")+
   theme_classic()+
-  xlim(0,2)+
-  geom_vline(aes(xintercept=mean(cv, na.rm=T)), color="red", linetype="dashed", size=1)+
-  scale_y_continuous(expand = c(NA, 0), limits = c(0, 400))+
-  scale_x_continuous(expand = c(0, NA), limits = c(0, 2))+
   theme(plot.margin=unit(c(0.5,1,0.5,0.5),"cm"))+
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5))+
+  scale_y_continuous(expand = c(NA, 0), limits = c(0, 27))+
+  scale_x_continuous(expand = c(0, NA), limits = c(0, 25))
+
+
+
 
 # Heat map to look just at years of data available in the raw data and the subset
-# heatmap <- ggplot(SC, aes(x = Year, y = SiteID)) + 
-#   geom_tile(color = "red")+
-#   theme(axis.text.y=element_blank())+
-#   xlim(1900,2020)
-# sub_heatmap <- ggplot(SC_sub, aes(x = Year, y = SiteID)) + 
-#   geom_tile(color = "red")+
-#   theme(axis.text.y=element_blank())+
-#   xlim(1900,2020)
-# subw_heatmap <- ggplot(SC_sub_w, aes(x = Year, y = SiteID)) +
-# geom_tile(color = "red")+
-# theme(axis.text.y=element_blank())+
-# xlim(1900,2020)
-# print(heatmap)
-# print(sub_heatmap)
+heatmap <- ggplot(SC, aes(x = Year, y = SiteID)) +
+  geom_tile(color = "red", fill = "red")+
+  theme(axis.text.y=element_blank())+
+  xlim(1900,2020)+
+  theme(plot.margin=unit(c(0.5,1,0.5,0.5),"cm"))+
+  labs(title = "Data Availability", subtitle = "All SC Data")+
+  theme(plot.title = element_text(hjust = 0.5),  plot.subtitle = element_text(hjust = 0.5))
+  
+sub_heatmap <- ggplot(SC_sub, aes(x = Year, y = SiteID)) +
+  geom_tile(color = "red", fill = "red")+
+  theme(axis.text.y=element_blank())+
+  xlim(1900,2020)+
+  theme(plot.margin=unit(c(0.5,1,0.5,0.5),"cm"))+
+  labs(title = "Data Availability", subtitle = "SC Data with >= 12 obs. per Year")+
+  theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5))
+
+# remake SC_continuous so Year works out here
+cont_heatmap <- ggplot(SC_continuous, aes(x = Year, y = SiteID)) +
+  geom_tile(color = "red", fill = "red")+
+  theme(axis.text.y=element_blank())+
+  xlim(1900,2020)+
+  theme(plot.margin=unit(c(0.5,1,0.5,0.5),"cm"))+
+  labs(title = "Data Availability", subtitle = "Continuous SC Data")+
+  theme(plot.title = element_text(hjust = 0.5),  plot.subtitle = element_text(hjust = 0.5))
+
+print(heatmap) # SC_heatmap
+print(sub_heatmap) # SCsub_heatmap
+print(cont_heatmap) # SCcont_heatmap
+
 # #print(subw_heatmap)
 # rm(heatmap, sub_heatmap)
 
