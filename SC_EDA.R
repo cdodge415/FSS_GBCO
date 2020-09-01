@@ -9,11 +9,10 @@ library(plyr)
 library(ggplot2)
 library(zoo)
 
-# Read in specific conductance (SC) data 
+# Read in SC data 
 setwd("/Volumes/Blaszczak Lab/FSS/All Data")
 SC <- readRDS("all_SC_data.rds")
 # levels(SC$SiteID) # 25,624 sites
-# class(SC)
 SC <- as.data.frame(SC)
 SC <- select(SC, -c("SiteDate"))
 
@@ -62,44 +61,62 @@ SC_sub$SiteID <- factor(SC_sub$SiteID)
 # levels(SC_sub$SiteID) # 8872 site-years, 1603 sites, 552,496 observations
 
 # SC_continuous = site-years with >= 350 measurements
-SC_continuous <- SC_per_sy[which(SC_per_sy$freq >= 350),] # 517 site-years
+SC_continuous <- SC_per_sy[which(SC_per_sy$freq >= 350),] # 484 site-years
 SC_continuous$SiteID <- factor(SC_continuous$SiteID)
-levels(SC_continuous$SiteID) # 93 sites
+levels(SC_continuous$SiteID) # 89 sites
 SC_continuous <- SC[which(SC$SiteYear %in% SC_continuous$SiteYear),]
 class(SC_continuous$Year)
 SC_continuous$Year <- as.factor(SC_continuous$Year)
 
-SC_cont_POR <- SC_continuous %>%
-  group_by(SiteID, Year) %>%
-  summarise_at(.vars = "SpC", .funs = c("mean" = mean))
+# output site list of continuous data (only need to do this once)
+# cont_sites <- SC_continuous
+# class(cont_sites)
+# cont_sites <- select(cont_sites, c("SiteID", "SpC"))
+# setwd("~/Desktop/Blaszczak Lab/GB CO WQ Data/WQP Formatted Meta")
+# write.csv(cont_sites, "WQ_USGS_SCcontinuous_site_list.csv")
 
-SC_cont_POR$PORadd <- "1"
-SC_cont_POR$PORadd <- as.numeric(SC_cont_POR$PORadd)
-SC_cont_POR <- as.data.frame(SC_cont_POR)
-SC_cont_POR <- SC_cont_POR %>%
-  group_by(SiteID) %>%
-  summarise_at(.vars = "PORadd", .funs = c("Years_cont" = sum))
-# 88 sites with continuous data  (what happened to 93?)
-library(tidyverse)
-SC_cont_POR$Years_cont <- as.factor(SC_cont_POR$Years_cont)
-print(paste(levels(SC_cont_POR$Years_cont)))
-count(SC_cont_POR$Years_cont)
-x <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 19, 21, 24)
-y <- c(26, 12, 7, 6, 1, 5, 5, 4, 3, 6, 1, 2, 3, 2, 2, 1, 1, 1)
-x_name <- "n_years"
-y_name <- "n_occurrences"
-cont <- data.frame(x,y)
-names(cont) <- c(x_name,y_name)
+# SC_cont_POR <- SC_continuous %>%
+#   group_by(SiteID, Year) %>%
+#   summarise_at(.vars = "SpC", .funs = c("mean" = mean))
+# 
+# SC_cont_POR$PORadd <- "1"
+# SC_cont_POR$PORadd <- as.numeric(SC_cont_POR$PORadd)
+# SC_cont_POR <- as.data.frame(SC_cont_POR)
+# SC_cont_POR <- SC_cont_POR %>%
+#   group_by(SiteID) %>%
+#   summarise_at(.vars = "PORadd", .funs = c("Years_cont" = sum))
+# # 88 sites with continuous data  (what happened to 93?)
+# library(tidyverse)
+# SC_cont_POR$Years_cont <- as.factor(SC_cont_POR$Years_cont)
+# print(paste(levels(SC_cont_POR$Years_cont)))
+# count(SC_cont_POR$Years_cont)
+# x <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 19, 21, 24)
+# y <- c(26, 12, 7, 6, 1, 5, 5, 4, 3, 6, 1, 2, 3, 2, 2, 1, 1, 1)
+# x_name <- "n_years"
+# y_name <- "n_occurrences"
+# cont <- data.frame(x,y)
+# names(cont) <- c(x_name,y_name)
+# 
+# ggplot(cont, aes(x=n_years, y = n_occurrences)) +
+#   labs(title = "Continuous SC Data", x = "# of Years", y = "# of Sites", subtitle = "n = 88 sites")+
+#   geom_col(alpha=.5, position="identity", colour = NA, fill = "lightseagreen")+
+#   theme_classic()+
+#   theme(plot.margin=unit(c(0.5,1,0.5,0.5),"cm"))+
+#   theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5))+
+#   scale_y_continuous(expand = c(NA, 0), limits = c(0, 27))+
+#   scale_x_continuous(expand = c(0, NA), limits = c(0, 25))
 
-ggplot(cont, aes(x=n_years, y = n_occurrences)) +
-  labs(title = "Continuous SC Data", x = "# of Years", y = "# of Sites", subtitle = "n = 88 sites")+
-  geom_col(alpha=.5, position="identity", colour = NA, fill = "lightseagreen")+
+SC_count <- plyr::count(SC, vars = "SiteID")
+SC_count$freq <- as.numeric(SC_count$freq)
+
+ggplot(SC_count, aes(x=freq)) +
+  labs(title = "SC Data", x = "# of Observations", y = "# of Sites")+
+  geom_histogram(binwidth = 100,alpha=.5, colour = "black", fill = "lightseagreen")+
   theme_classic()+
   theme(plot.margin=unit(c(0.5,1,0.5,0.5),"cm"))+
-  theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5))+
-  scale_y_continuous(expand = c(NA, 0), limits = c(0, 27))+
-  scale_x_continuous(expand = c(0, NA), limits = c(0, 25))
-
+  theme(plot.title = element_text(hjust = 0.5))#+
+ # xlim(0,200)+
+ # ylim(0, 16500)
 
 
 
@@ -176,6 +193,13 @@ SSsubSY <- SC_sub %>%
   summarise_at(.vars = "SpC", .funs = c("min" = min, "max"=max, "mean"=mean, "mode"=getmode, "median"=median, "sd"=sd, "tm"=tm, "IQR"=iqr))
 SSsubSY$range <- SSsubSY$max-SSsubSY$min
 SSsubSY$cv <- SSsubSY$sd/SSsubSY$mean
+
+# summary statistics by site (subset of sites with at least monthly measurements)
+SSSCcont <- SC_continuous %>%
+  group_by(SiteID) %>%
+  summarise_at(.vars = "SpC", .funs = c("min" = min, "max"=max, "mean"=mean, "mode"=getmode, "median"=median, "sd"=sd, "tm"=tm, "IQR"=iqr))
+SSSCcont$range <- SSSCcont$max-SSSCcont$min
+SSSCcont$cv <- SSSCcont$sd/SSSCcont$mean
 
 # VARIABILITY ####
 # cv ####
@@ -340,36 +364,123 @@ annual_avg_min_count$mean = factor(annual_avg_min_count$mean, levels = month.abb
 ggplot(annual_avg_min_count)+
   geom_col(mapping = aes(x = mean, y = freq))
 
+# Median (of rolling mean) #### 
+# Max SC_sub
+annual_avg_max <- monthly_max %>% # take averages of month of peak SC_sub for all years for each site
+  group_by(SiteID) %>%
+  summarise_at(.vars = "Month", .funs = c("mean"=mean, "mode"=getmode, "median"=median, "sd"=sd))
+annual_avg_max$median <- round(annual_avg_max$median)
+annual_avg_max_count <- plyr::count(annual_avg_max, vars = "median") 
+annual_avg_max_count$median <- month.abb[annual_avg_max_count$median]
+annual_avg_max_count$median = factor(annual_avg_max_count$median, levels = month.abb)
+ggplot(annual_avg_max_count)+
+  geom_col(mapping = aes(x = median, y = freq))
+
+# Min SC_sub
+annual_avg_min <- monthly_min %>%
+  group_by(SiteID) %>%
+  summarise_at(.vars = "Month", .funs = c("mean"=mean, "mode"=getmode, "median"=median, "sd"=sd))
+annual_avg_min$median <- round(annual_avg_min$median)
+annual_avg_min_count <- plyr::count(annual_avg_min, vars = "median")
+annual_avg_min_count$median <- month.abb[annual_avg_min_count$median]
+annual_avg_min_count$median = factor(annual_avg_min_count$median, levels = month.abb)
+ggplot(annual_avg_min_count)+
+  geom_col(mapping = aes(x = median, y = freq))
+
+
+# Median ####
+# Max SC_sub
+# take averages of all years
+annual_avg_max <- monthly_max %>% # take averages of month of peak SC_sub for all years for each site
+  group_by(SiteID) %>%
+  summarise_at(.vars = "Month", .funs = c("mean"=mean, "mode"=getmode, "median"=median, "sd"=sd))
+annual_avg_max$median <- round(annual_avg_max$median)
+annual_avg_max_count <- plyr::count(annual_avg_max, vars = "median") # choose which function you want to use and apply it to the following lines as well
+annual_avg_max_count$median <- month.abb[annual_avg_max_count$median]
+annual_avg_max_count$median = factor(annual_avg_max_count$median, levels = month.abb)
+ggplot(annual_avg_max_count)+
+  geom_col(mapping = aes(x = median, y = freq))
+
+# Min SC_sub
+annual_avg_min <- monthly_min %>%
+  group_by(SiteID) %>%
+  summarise_at(.vars = "Month", .funs = c("mean"=mean, "mode"=getmode, "median"=median, "sd"=sd))
+annual_avg_min$median <- round(annual_avg_min$median)
+annual_avg_min_count <- plyr::count(annual_avg_min, vars = "median")
+annual_avg_min_count$median <- month.abb[annual_avg_min_count$median]
+annual_avg_min_count$median = factor(annual_avg_min_count$median, levels = month.abb)
+ggplot(annual_avg_min_count)+
+  geom_col(mapping = aes(x = median, y = freq))
 
 
 # MAPPING ####
-# bring in site metadata
-library(viridis)
+setwd("/Volumes/Blaszczak Lab/FSS/WQP Data/WQP Formatted Meta")
+WQP_site_data <- read.csv("WQP_location_data_NAD83.csv")
+colnames(WQP_site_data)
+WQP_site_data <- select(WQP_site_data, c("X", "Lat_NAD83", "Lon_NAD83"))
+colnames(WQP_site_data)<- c("Site_ID", "Lat", "Lon")
+
 setwd("~/Desktop/Blaszczak Lab/GB CO WQ Data/USGS Data Retrieval from Phil")
-site_data <- readRDS("GBCO_dischSC_sites.rds")
+site_data <- read.csv("all_SC_lotic_sensor.csv")
 colnames(site_data)
-site_data <- select(site_data, c("Site_ID","station_nm", "Lat", "Lon", "huc_cd"))
-site_data <- site_data[which(site_data$Site_ID %in% SC$SiteID),]
-site_data <- unique(site_data)
-site_data <- merge(site_data, lm_slope, by.x = "Site_ID", by.y = "names")
+site_data <- select(site_data, c("Site_ID", "Lat", "Lon"))
+site_data$Site_ID <- ifelse(site_data$Site_ID < 1e7,
+                            yes = paste("0", site_data$Site_ID, sep=""),
+                            no = paste(site_data$Site_ID))
+site_data$Site_ID <- paste("USGS-", site_data$Site_ID, sep = "")
 
-some.states <- c('california', 'nevada', 'utah', 'wyoming', 'colorado', 'arizona', 'new mexico')
+site_data_final <- rbind(WQP_site_data, site_data)
+site_data_final <- site_data_final[!duplicated(site_data_final),]
+site_data_final <- site_data_final[which(site_data_final$Site_ID %in% SC$SiteID),]
+# continuous SC data
+library(viridis)
+site_data_cont <- site_data[which(site_data$Site_ID %in% SC_continuous$SiteID),] # 347
+site_data_cont <- site_data_cont[!duplicated(site_data_cont),] # 88 obs. (lost 1?)
+site_data_cont$avg_SC <- SSSCcont$mean
+
+some.states <- c('california', 'nevada', 'utah', 'wyoming', 'colorado', 'arizona', 'new mexico', 'idaho', 'oregon')
 some.states.map <- map_data("state", region = some.states)
+ggplot(some.states.map)+
+  geom_polygon(mapping = aes(x = long, y = lat, group = group), fill = "gray", color = "white")+
+  geom_point(site_data_cont, mapping = aes(x = Lon, y = Lat, color = avg_SC), size = 3, alpha = .6)+
+  scale_x_continuous(limits = c(-125,-101))+
+  theme(panel.background = element_blank(),axis.title = element_blank(), axis.ticks = element_blank(), axis.line = element_blank(), axis.text = element_blank(), plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5))+
+  labs(title = "Continuous SC Data", subtitle = "n = 89", color = "Avg. SC (uS/cm)")+
+  scale_color_viridis(option = "C")
 
-# to make visualization with colors easier for now:
-site_data <- site_data[-which(site_data$Site_ID == "09179200"),]
-site_data <- site_data[-which(site_data$Site_ID == "10172630"),]
-site_data <- site_data[-which(site_data$Site_ID == "09153290"),]
-#
+# not continuous SC data ( should work on getting one metadata df)
+SC_not_cont <- setdiff(SC, SC_continuous) # SC data that is not continuous
+SC_not_cont_sites <- site_data_final[which(site_data_final$Site_ID %in% SC_not_cont$SiteID),]
+colnames(SC_not_cont_sites)
+SS <- SS[which(SS$SiteID %in% SC_not_cont_sites$Site_ID),]
+x <- SC_not_cont_sites[duplicated(SC_not_cont_sites$Site_ID),] # USGS-09418700 has two coords, pick 1
+SC_not_cont_sites <- SC_not_cont_sites[-c(5969),]  
+SC_not_cont_sites$avg_SC <- SS$mean
+
+# quantile(SC_not_cont_sites$avg_SC)
+# 0%          25%          50%          75%         100% 
+# 0.0        251.0        489.5        954.0 3208145088.4 
+# breaks = c(0, 251, 489.5, 954.0, 3208145088.4)
 
 ggplot(some.states.map)+
-  geom_polygon(mapping = aes(x = long, y = lat, group = group), fill = "white", color = "black")+
-  geom_point(site_data, mapping = aes(x = Lon, y = Lat, color = slopes))+
+  geom_polygon(mapping = aes(x = long, y = lat, group = group), fill = "gray", color = "white")+
+  geom_point(subset(SC_not_cont_sites, avg_SC <= 30000) , mapping = aes(x = Lon, y = Lat, color = avg_SC), size = 1, alpha = .6)+  scale_x_continuous(limits = c(-125,-101))+
+  theme(panel.background = element_blank(),axis.title = element_blank(), axis.ticks = element_blank(), axis.line = element_blank(), axis.text = element_blank(), plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5))+
+  labs(title = "Non-Continuous SC Data", subtitle = "n = 25,602", color = "Avg. SC (uS/cm)")+
+  scale_color_viridis(option = "C")
+# past 30,000 it's mostly WQP sites and USGS sites with longer ID's (springs?)
+
+# all data
+# site_data_final
+ggplot(some.states.map)+
+  geom_polygon(mapping = aes(x = long, y = lat, group = group), fill = "gray", color = "white")+
+  geom_point(data = site_data_final, mapping = aes(x = Lon, y = Lat), size = .6, shape = 21, color = "turquoise4")+  
   scale_x_continuous(limits = c(-125,-101))+
-  theme(panel.background = element_blank(),axis.title = element_blank(), axis.ticks = element_blank(), axis.line = element_blank(), axis.text = element_blank(), plot.title = element_text(hjust = 0.75))+
-  labs(title = "Slope of USGS Daily SC Linear Models", color = "ΔSC/Time")+
-  scale_color_viridis(option = "A")
-#scale_color_gradientn(colours = rainbow(2), trans = "reverse")
+  theme(panel.background = element_blank(),axis.title = element_blank(), axis.ticks = element_blank(), axis.line = element_blank(), axis.text = element_blank(), plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5))+
+  labs(title = "SC Data", subtitle = "n = 25,602")+
+  scale_color_viridis(option = "C")
+
+
 
 # PLOT TS ####
 # (time_plot <- ggplot(SC_sub, aes(x = Date, y = SpC, color = SiteID)) +
