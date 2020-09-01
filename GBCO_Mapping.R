@@ -57,9 +57,9 @@ ggplot(some.states.map)+
 # bring in Watershed Boundary Dataset (WBD) data:
 # I downloaded the WBD by 2 digit HUC to my computer
 # I am having issues accessing some web services e.g. downloading using nhdplustools to bring in shapefiles
-basin14 <- st_read("~/Desktop/Blaszczak Lab/GB CO WQ Data/NHD/WBD_14_HU2_Shape/WBDHU2.shp")
-basin15 <- st_read("~/Desktop/Blaszczak Lab/GB CO WQ Data/NHD/WBD_15_HU2_Shape/WBDHU2.shp")
-basin16 <- st_read("~/Desktop/Blaszczak Lab/GB CO WQ Data/NHD/WBD_16_HU2_Shape/WBDHU2.shp")
+basin14 <- st_read("/Volumes/Blaszczak Lab/FSS/NHD/NHD_H_1606_HU4_Shape/WBDHU2.shp")
+basin15 <- st_read("/Volumes/Blaszczak Lab/FSS/NHD/NHD_H_1505_HU4_Shape/WBDHU2.shp")
+basin16 <- st_read("/Volumes/Blaszczak Lab/FSS/NHD/NHD_H_1407_HU4_Shape/WBDHU2.shp")
 
 # view metadata:
 st_geometry_type(basin14)
@@ -141,14 +141,16 @@ st_write(flowlines16, "HUC16_flowlines.shp")
 # MAP with all elements: ####
 ggplot(some.states.map)+
   geom_polygon(mapping = aes(x = long, y = lat, group = group), fill = "grey", color = "white")+
-  geom_point(dat, mapping = aes(x = Lon, y = Lat), size = 0.25)+
-  geom_sf(data = basin14, size = 0.25, color = "black", fill = NA) +
-  geom_sf(data = basin15, size = 0.25, color = "black", fill = NA) +
-  geom_sf(data = basin16, size = 0.25, color = "black", fill = NA)+
-  #geom_sf(data = filter(flowlines14, flowlines14$GNIS_Name == "Colorado River"), size = 0.05, color = "cyan")+ # we can filter for specific streams/rivers this way
-  geom_sf(data = flowlines14, size = 0.05, color = "blue")+
-  geom_sf(data = flowlines15, size = 0.05, color = "blue")+
-  geom_sf(data = flowlines16, size = 0.05, color = "blue")+
+  labs(title = "Specific Conductance Sites")+
+  theme(plot.title = element_text(hjust = 0.5))+
+  geom_point(dat, mapping = aes(x = Lon, y = Lat), size = 0.25, color = "turquoise4", alpha = 0.6)+
+  geom_sf(data = basin14, size = 0.25, color = "indianred1", fill = NA) +
+  geom_sf(data = basin15, size = 0.25, color = "indianred1", fill = NA) +
+  geom_sf(data = basin16, size = 0.25, color = "indianred1", fill = NA)+
+  # geom_sf(data = filter(flowlines14, flowlines14$GNIS_Name == "Colorado River"), size = 0.05, color = "cyan")+ # we can filter for specific streams/rivers this way
+  # geom_sf(data = flowlines14, size = 0.05, color = "blue")+
+  # geom_sf(data = flowlines15, size = 0.05, color = "blue")+
+  # geom_sf(data = flowlines16, size = 0.05, color = "blue")+
   coord_sf(crs = 4269)
 
 
