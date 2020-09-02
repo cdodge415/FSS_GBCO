@@ -432,6 +432,7 @@ site_data$Site_ID <- paste("USGS-", site_data$Site_ID, sep = "")
 site_data_final <- rbind(WQP_site_data, site_data)
 site_data_final <- site_data_final[!duplicated(site_data_final),]
 site_data_final <- site_data_final[which(site_data_final$Site_ID %in% SC$SiteID),]
+
 # continuous SC data
 library(viridis)
 site_data_cont <- site_data[which(site_data$Site_ID %in% SC_continuous$SiteID),] # 347
