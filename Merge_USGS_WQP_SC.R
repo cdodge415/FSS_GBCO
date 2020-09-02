@@ -2,6 +2,7 @@ library(dplyr)
 library(plyr)
 library(ggplot2)
 library(lubridate)
+library(data.table)
 ########################### Merge all daily and point USGS data and WQP data 
 # Format and merge USGS SC uv, dv, and qw data ####
 setwd("/Volumes/Blaszczak Lab/FSS/All Data")
@@ -76,7 +77,7 @@ USGS_qw <- USGS_qw[-which(USGS_qw$SiteDate %in% USGS_qw_rm$SiteDate),] # subset
 USGS_dv <- USGS_dv[-which(USGS_dv$SiteDate %in% dat_qwdv$SiteDate),]
 USGS_uv <- USGS_uv[-which(USGS_uv$SiteDate %in% dat_qwuv$SiteDate),]
 
-USGS <- rbind_list(USGS_qw, USGS_dv, USGS_uv)
+USGS <- dplyr::rbind_list(USGS_qw, USGS_dv, USGS_uv)
 duplicated <- USGS[duplicated(USGS[4]),] # none!
 unique(USGS$SiteDate)
 
@@ -141,6 +142,12 @@ class(USGS)
 class(WQ)
 USGS <- as.data.frame(USGS)
 USGS$Source <- "USGS"
+class(USGS$SiteID)
+class(WQ$SiteID)
+USGS$SiteID <- factor(USGS$SiteID)
+WQ$SiteID <- factor(WQ$SiteID)
+levels(USGS$SiteID) # 159
+levels(WQ$SiteID) # 25,623
 WQ$Source <- "WQP"
 SC <- rbind(USGS, WQ)
 
