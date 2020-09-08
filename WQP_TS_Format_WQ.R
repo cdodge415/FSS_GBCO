@@ -1,4 +1,5 @@
 ##### Format Raw Time Series (TS) Data from the Water Quality Data Portal (WQP) ####
+
 ## Call packages
 lapply(c("plyr","dplyr","ggplot2","cowplot",
          "lubridate","tidyverse", "readxl", "data.table"), require, character.only=T)
@@ -23,7 +24,6 @@ WQ <- rbind(WQ, HUC16, deparse.level = 1)
 
 ## Subset columns
 names(WQ)
-################################# should we also be filtering by water body type?
 sub <- WQ[,c("ActivityStartDate","CharacteristicName","ActivityStartTime/Time", "ActivityStartTime/TimeZoneCode",
             "MonitoringLocationIdentifier",
             "ResultMeasureValue", "ResultMeasure/MeasureUnitCode", "HUC")]
@@ -258,10 +258,11 @@ is.nan.data.frame <- function(x)
 
 sb[is.nan(sb)] <- NA
 
-### Need to continue work from here on out
 dat <- sb
 #rm(sb)
+
 # we shouldnt need the next lines because of how we used reshape2 rather then joining. We already have means.
+
 ## Average across duplicate DateTimes
 #dat$DateTimeID <- paste(dat$DateTime,dat$SiteID)
 # sapply(dat, class)
