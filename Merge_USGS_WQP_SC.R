@@ -83,6 +83,7 @@ unique(USGS$SiteDate)
 
 rm(overlap, overlap1, overlap2, overlap3, uv_check, dv_check, qw_check, USGS_qw1, USGS_qw2, USGS_qw_rm, dat_qwdv, dat_qwu, duplicated)
 
+# Standardize SiteID format between USGS and WQP data
 colnames(USGS)
 USGS$SiteID <- paste0("USGS-", USGS$SiteID)
 class(USGS$SiteID)
@@ -92,6 +93,8 @@ USGS <- select(USGS, -c("SiteDate"))
 USGS$SiteDate <- paste(USGS$SiteID, USGS$Date, sep = " ") 
 saveRDS(USGS, "USGS_SC.rds")
 rm(dat_qwuv, USGS_dv, USGS_qw, USGS_uv)
+
+
 # Now onto the WQP data
 # Format WQP SC data and merge it with USGS SC data ####
 setwd("/Users/laurenbolotin/Desktop/Blaszczak Lab/GB CO WQ Data/WQP Formatted TS")
@@ -135,6 +138,8 @@ duplicated <- WQ[duplicated(WQ[3]),] # none!
 colnames(USGS)
 colnames(WQ)
 WQ <- select(WQ, c("SiteID", "Date", "SpC", "SiteDate"))
+saveRDS(WQ, "WQP_SC.rds")
+
 
 # Merge USGS and WQP SC data ####
 # The USGS and WQP SC data are now in the same format and can be combined
