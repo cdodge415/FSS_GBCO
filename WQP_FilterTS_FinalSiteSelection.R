@@ -12,12 +12,13 @@ class(TS$SiteID)
 levels(TS$SiteID)
 
 setwd("~/Desktop/Blaszczak Lab/GB CO WQ Data/WQP Formatted Meta")
-meta <- read.csv("WQP_formatted_metadata_WQ.csv") # 32,772 sites
+meta <- read.csv("WQP_formatted_metadata_WQ.csv") # 32,772 sites 
+# Formatted metadata was already filtered for acceptable site types
 
 names(TS)
 names(meta)
 
-# Subset data accordingly: 
+# Subset TS data accordingly for acceptable site types: 
 TS_sub <- subset(TS, TS$SiteID %in% meta$SiteID)
 
 # Output a csv with just the SC data:
