@@ -71,6 +71,7 @@ acceptable_sitetypes <- c("River/Stream","River/Stream Perennial",
                          "Channelized Stream","Canal Drainage","Canal Irrigation",
                          "Stream: Canal","River/Stream Intermittent","Stream: Tidal stream",
                          "Riverine Impoundment","Storm Sewer","River/Stream Ephemeral")
+
 sub2 <- sub[which(sub$WaterBodyType %in% acceptable_sitetypes),]
 View(sub2 %>% group_by(WaterBodyType) %>% count())
 
@@ -78,6 +79,7 @@ names(sub2)
 class(sub2$SiteID)
 sub2$SiteID <- factor(sub2$SiteID)
 levels(sub2$SiteID)
+
 ## Export
 setwd("~/Desktop/Blaszczak Lab/GB CO WQ Data/WQP Formatted Meta")
 write.csv(sub2, "WQP_formatted_metadata_WQ.csv")
