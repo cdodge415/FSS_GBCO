@@ -1,16 +1,19 @@
 library(raster)
 library(sp)
+library(sf)
 library(rgdal)
+library(tidyverse)
 # This is done based solely on SC data
 # Bring in WQP site data
 setwd("~/Desktop/Blaszczak Lab/GB CO WQ Data/WQP Formatted Meta")
 WQP <- read.csv("WQP_formatted_metadata_WQ.csv", header = T) # 32,722 WQP sites with flowing waters
+
 # Bring in finalized sites of interest for SC
-setwd("~/Desktop/Blaszczak Lab/GB CO WQ Data/Finalized TS (All Sources)")
-sites <- readRDS("SCd.RDS")
+setwd("/Volumes/Blaszczak Lab/FSS/All Data")
+sites <- readRDS("all_SC_data.rds")
 # subset WQP site data only for the sites used in analysis of SC
-dat <- subset(WQP, WQP$SiteID %in% sites$SiteID) # 25616 sites (probably because this is only SC data). We will also end up reducing the sites in the data, because they have not yet been filtered for only flowing waters.
-# We're missing 1 USGS site
+dat <- subset(WQP, WQP$SiteID %in% sites$SiteID) # 25623 sites 
+# ?? We're missing 1 USGS site
 #dat <- WQP
 rm(sites, WQP)
 
@@ -25,7 +28,9 @@ sub$Latitude <- abs(sub$Latitude)
 ctest_lat <- sub %>% separate(Latitude, c("Num","Dec"))
 ctest_lat[is.na(ctest_lat$Num),];ctest_lat[is.na(ctest_lat$Dec),] 
 # Remove any coordinates that are rounded off
-dat <- dat[-which(dat$SiteID %in% ctest_lat[is.na(ctest_lat$Dec),]$SiteID),] ## went from 25616 to 25602
+dat <- dat[-which(dat$SiteID %in% ctest_lat[is.na(ctest_lat$Dec),]$SiteID),] ## went from 25623 to 25609 (need to filter data for whatever sites we just removed)
+removed <- setdiff(ctest_lat$SiteID, dat$SiteID)
+print(removed) # 14 WQP sites
 
 ctest_long <- sub %>% separate(Longitude, c("Num","Dec"))
 ctest_long[is.na(ctest_long$Num),]; ctest_long[is.na(ctest_long$Dec),] ## 0
@@ -36,7 +41,9 @@ ctest_long[is.na(ctest_long$Num),]; ctest_long[is.na(ctest_long$Dec),] ## 0
 ## Adjust or remove specific sites that are still problematic (see GRDO_check_WQP_coords)
 # says Longitude: -17.74332
 dat <- dat[-which(dat$SiteID == "NFRIA-North Fork Below Leroux Creek"),]
-# 25,601 sites
+dat$SiteID <- factor(dat$SiteID)
+levels(dat$SiteID)
+# 25,608 sites
 #######################################
 ## Check Coord_Units
 #######################################
