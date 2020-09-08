@@ -65,6 +65,7 @@ tail(sub)
 WBT <- sub %>% group_by(WaterBodyType) %>% count()
 levels(as.factor(sub$WaterBodyType))
 
+# USGS site types included in data: "ST" (stream), "ST-CA"(canal), "ST-DCH"(ditch), "ST-TS"(tidal stream), "SP" (spring)
 acceptable_sitetypes <- c("River/Stream","River/Stream Perennial",
                          "Spring","Stream","Canal Transport","Stream: Ditch",
                          "Channelized Stream","Canal Drainage","Canal Irrigation",
