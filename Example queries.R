@@ -1,5 +1,5 @@
 #===============================================================================
-#Example script for filtering data queries
+#Script for filtering data queries
 #Created 5/15/2020
 #===============================================================================
 setwd("~/Desktop/Blaszczak Lab/GB CO WQ Data/USGS Data Retrieval from Phil")
