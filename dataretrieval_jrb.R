@@ -2,9 +2,11 @@
 #6/1/20
 #setwd("~/Desktop/Blaszczak Lab/GB CO WQ Data/USGS Data Retrieval from Phil")
 #setwd("~/Desktop/Blaszczak Lab/GB CO WQ Data/USGS Data Retrieval from Phil/dataretrieval flow and spc")
+
 library(dataRetrieval)
 library(tidyverse)
 library(data.table)
+
 disch_huc_sites <- readRDS("GBCO_disch_sites.rds") # all lotic disch sites in the GBCO
 SC_huc_sites <- readRDS("GBCO_SC_sites.rds") # all lotic SC sites in the GBCO
 
@@ -39,11 +41,12 @@ discharge5 <- readNWISdv(siteNumber[3601:3800],
 discharge6 <- readNWISdv(siteNumber[3801:3899], parameterCd, startDate, endDate)
 discharge7 <- readNWISdv(siteNumbers = "414500112000000", parameterCd, startDate, endDate)
 
-
+# Downloaded by Joanna: 
 saveRDS(discharge, "USGS_disch_data.rds")
 saveRDS(discharge2, "USGS_disch_data2.rds")
 saveRDS(discharge3, "USGS_disch_data3.rds")
 saveRDS(discharge4, "USGS_disch_data4.rds")
+# Downloaded by Lauren
 #setwd("/Volumes/Blaszczak Lab/FSS/All Data")
 saveRDS(discharge5, "USGS_disch_data5.rds")
 saveRDS(discharge6, "USGS_disch_data6.rds")
@@ -53,7 +56,7 @@ saveRDS(discharge7, "USGS_disch_data7.rds")
 # Download water quality (qw) SC data (point measurements) ####
 #------------------------------
 parameterCd <- c("00095")
-# It just so happens that none of the gages in GBCO have the 00094 parameter for SC, so we don't need to download it
+# It just so happens that none of the gages in GBCO have the 00094 parameter for SC, so we don't need to download this parameter
 SC_huc_sites$Site_ID <- ifelse(SC_huc_sites$Site_ID < 1e7,
                                yes = paste("0", SC_huc_sites$Site_ID, sep=""),
                                no = SC_huc_sites$Site_ID)
@@ -121,10 +124,3 @@ alldisch <- bind_rows(alldisch, disch5)
 alldisch <- bind_rows(alldisch, disch6)
 alldisch <- bind_rows(alldisch, disch7)
 saveRDS(alldisch, "USGS_disch_data.rds")
-
-
-# filter for data that is approved for publication
-# final_SC_uv <- USGS_SC_uv_data[which(USGS_SC_uv_data$X_00095_00000_cd == "A"),]
-# class(final_SC_uv$site_no)
-# levels(final_SC_uv$site_no)
-# saveRDS(final_SC_uv, "USGS_SC_uv_data_AFP.rds")
