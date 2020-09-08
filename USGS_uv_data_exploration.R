@@ -17,14 +17,27 @@ SC$dqi <- as.factor(SC$dqi)
 levels(SC$dqi)
 # [1] "A"      "A [0]"  "A [4]"  "A [92]" "A [93]" "A e"    "A R"    "P"      "P Dis"  "P Dry" 
 # [11] "P Eqp"  "P Ice"  "P Mnt"  "P Ssn" 
-# for now, in order to re-run the exploratory data analysis, lets filter for all types of A, AR, and Ae
-SC <- subset(SC, dqi == "A" | dqi == "A [0]" | dqi == "A [4]" | dqi == "A [92]" | dqi == "A [93]" |
-               dqi == "A e" | dqi == "A R")
+SC <- SC[!is.na(SC$Specific.Conductance),]
+SC$dqi <- factor(SC$dqi)
+levels(SC$dqi)
+# "A"      "A [0]"  "A [4]"  "A [92]" "A [93]" "A e"    "A R"    "P" 
+count(SC$dqi)
+# x     freq
+# 1      A        17169391 ~95% of data
+# 2      A [0]    7
+# 3      A [4]    298
+# 4      A [92]   1343
+# 5      A [93]   640
+# 6      A e      678
+# 7      A R      29872
+# 8      P        836314 ~4.6%
+
+SC <- subset(SC, dqi == "A")
 SC$SiteID <- as.factor(SC$SiteID)
 levels(SC$SiteID)
 # 72 sites
 
-# The smallest resolution of data we want is daily, so create it from the 15-minute data
+# The smallest resolution of data we want is daily, so create daily data from the 15-minute data
 # Take daily means, compare to USGS dv data
 SC$Date <- as.Date(SC$DateTime)
 SC_daily <- SC %>%
@@ -67,116 +80,5 @@ levels(SCuv_d$SiteID) # 54,541 sites
 #output new unit value data (that has been turned into daily data)
 getwd()
 saveRDS(SCuv_d, "USGS_SC_uv_daily_dqi.rds")
-
-##################### SCRATCH THE REST (8/21/20 after doing the final data downloads) #########
-# The rest of this script was made before we analyzed the differences and overlaps of the dv and summarized uv data
-# #---------------------
-# # Create year and month column ####
-# #---------------------
-# sapply(SCuv, class)
-# SCuv$DateTime <- ymd_hms(SCuv$DateTime)
-# SCuv$Year <- year(SCuv$DateTime)
-# # get rid of any data from 2020
-# SCuv <- SCuv[which(SCuv$Year < "2020"),]
-# SCuv$Month <- month(SCuv$DateTime)
-# 
-# # Split by SiteID and count # of measurements per year
-# # SCuv_split <- split(SCuv, SCuv$SiteID)
-# # SCuv_split_ct <- lapply(SCuv_split,plyr::count,  vars = "Year")
-# 
-# # Stats by Site-year
-# site_year_stats <- SCuv %>% 
-#   group_by(SiteID, Year) %>%
-#   summarise_at(.vars = "SpC", .funs = c("max" = max, "min" = min, "mean" = mean, "sd" = sd))
-# site_year_stats$range <- (site_year_stats$max-site_year_stats$min)
-# # 578 site years of uv SCuv data from USGS
-# # try box plot?
-# 
-# # find # of measurements per site-year
-# site_year_count <- SCuv %>% 
-#   group_by(SiteID, Year) %>%  
-#   dplyr::summarise(n()) 
-# #site_year_split <- split(site_year_split, site_year$SiteID)
-# # site_year$range <- ifelse(site_year$max == site_year$min, NA, paste(site_year$range))
-# 
-# # split SCuv data by SiteID
-# #SCuv_site_split <- split(SCuv, SCuv$SiteID)
-# 
-# # Stats by SiteID
-# site_stats <- SCuv %>% 
-#   group_by(SiteID) %>%
-#   summarise_at(.vars = "SpC", .funs = c("max" = max, "min" = min, "mean" = mean, "sd" = sd))
-# site_stats$range <- (site_stats$max - site_stats$min)
-# # 68 sites
-# 
-# # Day of year
-# #dat$Date <- paste0(month(dat$DateTime), "-", day(dat$DateTime))
-# # SCuv$doy <- strftime(SCuv$Date, format = "%j")
-# # SCuv$doy <-as.numeric(SCuv$doy)
-# 
-# 
-# #----------------
-# # Site-Year
-# #----------------
-# # Max SCuv
-# monthly_max <- SCuv %>%
-#   group_by(SiteID, Year) %>%
-#   slice(which.max(SpC))
-# monthly_max_count <- plyr::count(monthly_max, vars = "Month")
-# class(monthly_max_count$Month)
-# monthly_max_count$Month <- month.abb[monthly_max_count$Month]
-# monthly_max_count$Month = factor(monthly_max_count$Month, levels = month.abb)
-# # 103 site-years had their max SCuv in Dec (the majority)
-# # versus only 12 in June and 13 in May 
-# ggplot(monthly_max_count)+
-#   geom_col(mapping = aes(x = Month, y = freq))
-# # take averages of all years
-# # create function to get the mode
-# getmode <- function(v) {
-#   uniqv <- unique(v)
-#   uniqv[which.max(tabulate(match(v, uniqv)))]
-# }
-# 
-# annual_avg_max <- monthly_max %>%
-#   group_by(SiteID) %>%
-#   summarise_at(.vars = "Month", .funs = c("mean"=mean, "mode"=getmode, "median"=mean, "sd"=sd))
-# 
-# annual_avg_max_count <- plyr::count(annual_avg_max, vars = "mode")
-# class(annual_avg_max_count$mode)
-# annual_avg_max_count$mode <- month.abb[annual_avg_max_count$mode]
-# annual_avg_max_count$mode = factor(annual_avg_max_count$mode, levels = month.abb)
-# ggplot(annual_avg_max_count)+
-#   geom_col(mapping = aes(x = mode, y = freq))
-# # 21 sites had their average annual max SCuv in December, 7 in Nov and July
-# # 1 in June, 2 in March and May
-#   
-# # Min SCuv
-# monthly_min <- SCuv %>%
-#   group_by(SiteID, Year) %>%
-#   slice(which.min(SpC))
-# monthly_min_count <- plyr::count(monthly_min, vars = "Month")
-# class(monthly_min_count$Month)
-# monthly_min_count$Month <- month.abb[monthly_min_count$Month]
-# monthly_min_count$Month = factor(monthly_min_count$Month, levels = month.abb)
-# # 187 site-years had their min SCuv in June (the majority)
-# # 117 in May (close to majority)
-# # versus only 4 in February and 8 in November
-# ggplot(monthly_min_count)+
-#   geom_col(mapping = aes(x = Month, y = freq))
-# 
-# annual_avg_min <- monthly_min %>%
-#   group_by(SiteID) %>%
-#   summarise_at(.vars = "Month", .funs = c("mean"=mean, "mode"=getmode, "median"=mean, "sd"=sd))
-# 
-# annual_avg_min_count <- plyr::count(annual_avg_min, vars = "mode")
-# class(annual_avg_min_count$mode)
-# annual_avg_min_count$mode <- month.abb[annual_avg_min_count$mode]
-# annual_avg_min_count$mode = factor(annual_avg_min_count$mode, levels = month.abb)
-# ggplot(annual_avg_min_count)+
-#   geom_col(mapping = aes(x = mode, y = freq))
-# #need to add missing months somehow
-# # 30 sites had their average annual minimum SCuv in June, 12 in May
-# # 1 in March, 2 in April and November
-
 
 
