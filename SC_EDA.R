@@ -1,7 +1,5 @@
 ###################################################################################################
 # EDA = Exploratory Data Analysis 
-# Most of this EDA was originally drafted using only USGS data. I am applying to all USGS and WQP data
-# and adding additional data exploration
 ###################################################################################################
 library(lubridate)
 library(dplyr)
@@ -12,7 +10,10 @@ library(zoo)
 # Read in SC data 
 setwd("/Volumes/Blaszczak Lab/FSS/All Data")
 SC <- readRDS("all_SC_data.rds")
-# levels(SC$SiteID) # 25,624 sites
+# remove the 1 site we did not have accurate location data for in WQP_location_data.R
+SC <- SC[-which(SC$SiteID == "NFRIA-North Fork Below Leroux Creek"),]
+SC$SiteID <- factor(SC$SiteID)
+# levels(SC$SiteID) # 25,623 sites
 SC <- as.data.frame(SC)
 SC <- select(SC, -c("SiteDate"))
 
@@ -22,7 +23,7 @@ SC$Month <- month(SC$Date)
 SC <- subset(SC, SC$Year >= "1900") 
 SC <- subset(SC, SC$Year < "2020")
 # SC$SiteID <- factor(SC$SiteID)
-# levels(SC$SiteID) # 25,617 sites
+# levels(SC$SiteID) # 25,616 sites
 
 # ouput final site list for spatial analysis (only need to do this once)
 # sites <- SC
@@ -35,35 +36,34 @@ SC <- subset(SC, SC$Year < "2020")
 
 
 # A look at # of measurements per site, per year, the period of record (POR), etc.
-
-# SC_per_month <- plyr::count(SC, vars = "Month")
-# There are definitely some large gaps here that may skew analysis of annual max and min's if using mode
-# Graphic representation:
-# SC$MonthAbb <- month.abb[SC$Month]
-# SC$MonthAbb = factor(SC$MonthAbb, levels = month.abb)
-# barplot(table(SC$MonthAbb))
+# Number of obs. per month
+SC_per_month <- count(SC, vars = "Month")
+SC$MonthAbb <- month.abb[SC$Month]
+SC$MonthAbb = factor(SC$MonthAbb, levels = month.abb)
+barplot(table(SC$MonthAbb))
+dev.off()
+rm(sites, SC_per_month)
 
 # DATA AVAILABILITY/SUBSETTING ####
 # see how many measurements there are in a year for each site-year
-SC_per_sy <- plyr::count(SC, vars = c("SiteID","Year")) 
+SC_per_sy <- count(SC, vars = c("SiteID","Year")) 
 SC_per_sy$SiteYear <- paste0(SC_per_sy$SiteID, "_", SC_per_sy$Year)
 SC$SiteYear <- paste0(SC$SiteID, "_", SC$Year) # add site-year to the full dataset
-# 83,553 site-years
+# 83,552 site-years
 
 # SC_sub = a subset of data:
 # Filter data for >= 12 data points per year. We are ASSUMING that this implies a monthly sampling 
-# use subset for identifying timing of max and mins, range, etc. # use the full dataset to look at trends over time
 SC_sub <- SC_per_sy[which(SC_per_sy$freq >= 12),] 
 SC_sub <- SC[which(SC$SiteYear %in% SC_sub$SiteYear),] 
 SC_sub$SiteYear <- factor(SC_sub$SiteYear) # get rid of unused levels by re-factoring
 SC_sub$SiteID <- factor(SC_sub$SiteID) 
 # levels (SC_sub$SiteYear)
-# levels(SC_sub$SiteID) # 8872 site-years, 1603 sites, 552,496 observations
+# levels(SC_sub$SiteID) # 8275 site-years, 1602 sites
 
 # SC_continuous = site-years with >= 350 measurements
-SC_continuous <- SC_per_sy[which(SC_per_sy$freq >= 350),] # 484 site-years
+SC_continuous <- SC_per_sy[which(SC_per_sy$freq >= 350),] # 482 site-years
 SC_continuous$SiteID <- factor(SC_continuous$SiteID)
-levels(SC_continuous$SiteID) # 89 sites
+levels(SC_continuous$SiteID) # 86 sites
 SC_continuous <- SC[which(SC$SiteYear %in% SC_continuous$SiteYear),]
 class(SC_continuous$Year)
 SC_continuous$Year <- as.factor(SC_continuous$Year)
@@ -75,6 +75,10 @@ SC_continuous$Year <- as.factor(SC_continuous$Year)
 # setwd("~/Desktop/Blaszczak Lab/GB CO WQ Data/WQP Formatted Meta")
 # write.csv(cont_sites, "WQ_USGS_SCcontinuous_site_list.csv")
 
+
+
+# Find better way to do this: 
+# Figure produced is saved at /Volumes/Blaszczak Lab/FSS/Figures/SC_cont_availability_barplot.pdf
 # SC_cont_POR <- SC_continuous %>%
 #   group_by(SiteID, Year) %>%
 #   summarise_at(.vars = "SpC", .funs = c("mean" = mean))
@@ -106,17 +110,19 @@ SC_continuous$Year <- as.factor(SC_continuous$Year)
 #   scale_y_continuous(expand = c(NA, 0), limits = c(0, 27))+
 #   scale_x_continuous(expand = c(0, NA), limits = c(0, 25))
 
-SC_count <- plyr::count(SC, vars = "SiteID")
-SC_count$freq <- as.numeric(SC_count$freq)
 
-ggplot(SC_count, aes(x=freq)) +
-  labs(title = "SC Data", x = "# of Observations", y = "# of Sites")+
-  geom_histogram(binwidth = 100,alpha=.5, colour = "black", fill = "lightseagreen")+
-  theme_classic()+
-  theme(plot.margin=unit(c(0.5,1,0.5,0.5),"cm"))+
-  theme(plot.title = element_text(hjust = 0.5))#+
- # xlim(0,200)+
- # ylim(0, 16500)
+
+# SC_count <- plyr::count(SC, vars = "SiteID")
+# SC_count$freq <- as.numeric(SC_count$freq)
+# 
+# ggplot(SC_count, aes(x=freq)) +
+#   labs(title = "SC Data", x = "# of Observations", y = "# of Sites")+
+#   geom_histogram(binwidth = 100,alpha=.5, colour = "black", fill = "lightseagreen")+
+#   theme_classic()+
+#   theme(plot.margin=unit(c(0.5,1,0.5,0.5),"cm"))+
+#   theme(plot.title = element_text(hjust = 0.5))#+
+#  # xlim(0,200)+
+#  # ylim(0, 16500)
 
 
 
@@ -498,6 +504,7 @@ ggplot(subset(SC, SiteID == "10343500"), aes(x = Date, y = SpC))+
   scale_x_date(date_labels = "%Y", date_breaks = "1 year") +
   theme_classic()+
   theme(legend.position = "none")
+
 # Interesting way to plot max and mins
 # install.packages("ggpmisc")  
 # library(ggpmisc)
@@ -508,7 +515,3 @@ ggplot(subset(SC, SiteID == "10343500"), aes(x = Date, y = SpC))+
 #   stat_valleys(mapping = aes(x = Date, y = SpC),color = "red")
 
 
-# SAVE DATA FILES ####
-saveRDS(SCd, "SCd.RDS")
-saveRDS(SCd_sub, "SCd_sub.RDS")
-saveRDS(SCd_sub2, "SCd_sub_sym.RDS")
