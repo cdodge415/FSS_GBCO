@@ -1,4 +1,5 @@
 # SC DATA ####
+# Example mapping code for Chloe
 # Combine CL data into one df 
 TWC_SC_CL$LatLong <- paste0(TWC_SC_CL$Lat, " ",TWC_SC_CL$Long)
 TWC_SC_CL_avg <- TWC_SC_CL %>%
