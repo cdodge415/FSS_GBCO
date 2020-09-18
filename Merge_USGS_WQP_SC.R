@@ -77,11 +77,17 @@ USGS_qw <- USGS_qw[-which(USGS_qw$SiteDate %in% USGS_qw_rm$SiteDate),] # subset
 USGS_dv <- USGS_dv[-which(USGS_dv$SiteDate %in% dat_qwdv$SiteDate),]
 USGS_uv <- USGS_uv[-which(USGS_uv$SiteDate %in% dat_qwuv$SiteDate),]
 
-USGS <- dplyr::rbind_list(USGS_qw, USGS_dv, USGS_uv)
+USGS_uv <- as.data.frame(USGS_uv)
+USGS_qw <- as.data.frame(USGS_qw)
+colnames(USGS_uv)
+colnames(USGS_dv)
+colnames(USGS_qw)
+
+USGS <- do.call("rbind", list(USGS_qw, USGS_dv, USGS_uv))
 duplicated <- USGS[duplicated(USGS[4]),] # none!
 unique(USGS$SiteDate)
 
-rm(overlap, overlap1, overlap2, overlap3, uv_check, dv_check, qw_check, USGS_qw1, USGS_qw2, USGS_qw_rm, dat_qwdv, dat_qwu, duplicated)
+rm(overlap, overlap1, overlap2, overlap3, uv_check, dv_check, qw_check, USGS_qw1, USGS_qw2, USGS_qw_rm, dat_qwdv, dat_qwuv, duplicated)
 
 # Standardize SiteID format between USGS and WQP data
 colnames(USGS)
