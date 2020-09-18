@@ -18,9 +18,9 @@ dat$doy <- as.numeric(as.character(dat$doy))
 
 filter_dat <- dat # we will use this later
 
-count(dat$SiteID) # choose some sites that have a lot of data
+# count(dat$SiteID) # choose some sites that have a lot of data
 
-## Example Plots #####
+## Example Plots of All Years of Data on Top of Each Other #####
 # ggplot(subset(dat, dat$SiteID == "USGS-09041400"))+
 #   geom_line(mapping = aes(x = doy, y = SpC, color = Year))+
 #   theme(legend.position = "none")
@@ -51,7 +51,7 @@ avg <- avg %>%
 
 # check <- subset(dat, dat$SiteID == "USGS-09014050" & dat$doy == 1)
 # check_avg <- mean(check$SpC)
-# rm(check, check_avg)
+# rm(check, check_avg) # all good
 
 # ggplot(subset(dat, dat$SiteID == "USGS-10133800"))+
 #   geom_line(mapping = aes(x = doy, y = SpC, color = Year))+
@@ -166,24 +166,24 @@ low_quart <- low_quart %>%
 # # Close the pdf file
 # dev.off()
 
-setwd("/Volumes/Blaszczak Lab/FSS/Figures/SingleTSPlots")
+# setwd("/Volumes/Blaszczak Lab/FSS/Figures/SingleTSPlots")
 # x <- "USGS-09034500"
 
 
-sites <- levels(dat$SiteID) # make this a subset of sites with pretty continuous data
+# sites <- levels(dat$SiteID) # make this a subset of sites with pretty continuous data
 
-plotSpC <- function(x){
-  pdf(paste0(x, "_singleTS.pdf"))
-  p <- ggplot(subset(dat, dat$SiteID == x))+
-    theme(legend.position = "none", panel.background = element_blank(), axis.line = element_line(colour = "black"))+
-    geom_line(mapping = aes(x = doy, y = SpC, color = Year))+
-    geom_line(subset(low_quart, up_quart$SiteID == x), mapping = aes(x = doy, y = lower_quart), color = "black")+
-    geom_line(subset(med, avg$SiteID == x), mapping = aes(x = doy, y = median), color = "black")+
-    geom_line(subset(up_quart, up_quart$SiteID == x), mapping = aes(x = doy, y = upper_quart), color = "black")+
-    geom_line(subset(avg, avg$SiteID == x), mapping = aes(x = doy, y = mean), color = "red")
-  print(p)
-  dev.off()
-}
+# plotSpC <- function(x){
+#   pdf(paste0(x, "_singleTS.pdf"))
+#   p <- ggplot(subset(dat, dat$SiteID == x))+
+#     theme(legend.position = "none", panel.background = element_blank(), axis.line = element_line(colour = "black"))+
+#     geom_line(mapping = aes(x = doy, y = SpC, color = Year))+
+#     geom_line(subset(low_quart, up_quart$SiteID == x), mapping = aes(x = doy, y = lower_quart), color = "black")+
+#     geom_line(subset(med, avg$SiteID == x), mapping = aes(x = doy, y = median), color = "black")+
+#     geom_line(subset(up_quart, up_quart$SiteID == x), mapping = aes(x = doy, y = upper_quart), color = "black")+
+#     geom_line(subset(avg, avg$SiteID == x), mapping = aes(x = doy, y = mean), color = "red")
+#   print(p)
+#   dev.off()
+# }
 
 # plotSpC(x)
 
@@ -202,7 +202,7 @@ colnames(filter_dat)
 
 filter_dat <- select(filter_dat, -c(SiteDate, Source, Date))
 filter_dat <- subset(filter_dat, filter_dat$SiteID %in% continuous$SiteID) # 86 sites with continuous data
-count_cont <- count(filter_dat, vars = c("SiteID","Year")) 
+count_cont <- plyr::count(filter_dat, vars = c("SiteID","Year")) 
 sub_cont <- subset(count_cont, count_cont$freq >= 350)
 sub_cont$SiteID <- factor(sub_cont$SiteID)
 levels(sub_cont$SiteID) # still 86 as it should be
@@ -259,7 +259,7 @@ plotSpC <- function(x){
 
 # plotSpC(x)
 
-# lapply(sites, plotSpC)
+# lapply(sites, plotSpC) # already ran and saved PDFs
 
 # Some plots only show one line, this is because those sites only have 1 year of continuous dat(a
 class(sub_cont$Year)
@@ -269,5 +269,13 @@ sub_cont$Year <- factor(sub_cont$Year)
 count_sy <- dplyr::count(sub_cont, vars = sub_cont$Year, wt_var = "freq")
 count_sy$pct_nsites <- count_sy$n/86
 # the highest %age of sites we have in one year of continuous data is 40% :( 
-
 # make barplot
+count_sy$vars <- as.numeric(as.character(count_sy$vars))
+
+ggplot(count_sy, aes(x = vars, y = n))+
+  geom_bar(stat = "identity", fill = "turquoise3")+
+  theme(legend.position = "none", panel.background = element_blank(), axis.line = element_line(colour = "black"))+
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 40))+
+  labs(x = "Year", y = "Available Sites", title = "# of Continuous Sites per Year")
+  
+  
