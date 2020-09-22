@@ -122,3 +122,19 @@ lapply(WQP_sites$SiteID, findCOMID)
 # ~15 mins got about 17% of it done 
 setwd("/Volumes/Blaszczak Lab/FSS/All Data")
 saveRDS(WQP_sites, "WQP_SC_ComID.rds")
+
+
+
+
+
+## Link data with NLCD data via ComID (Wieczorek & Schwarz 2019)
+setwd("/Volumes/Blaszczak Lab/FSS/NLCD/NLCD16_CAT_CONUS")
+nhd_attr <- read.csv("NLCD16_CAT_CONUS.csv")
+head(nhd_attr)
+
+setwd("/Volumes/Blaszczak Lab/FSS/All Data")
+usgs_comid <- readRDS("USGS_SC_ComID.rds")
+
+nhd_attr <- subset(nhd_attr, nhd_attr$COMID %in% usgs_comid$COMID)
+setwd("/Volumes/Blaszczak Lab/FSS/All Data")
+saveRDS(nhd_attr, "USGS_SC_NLCD.rds")
