@@ -278,4 +278,5 @@ ggplot(count_sy, aes(x = vars, y = n))+
   scale_y_continuous(expand = c(0, 0), limits = c(0, 40))+
   labs(x = "Year", y = "Available Sites", title = "# of Continuous Sites per Year")
   
+
   
