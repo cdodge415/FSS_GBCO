@@ -120,3 +120,5 @@ findCOMID <- function(x){ # x = USGS SiteID
 
 lapply(WQP_sites$SiteID, findCOMID)
 # ~15 mins got about 17% of it done 
+setwd("/Volumes/Blaszczak Lab/FSS/All Data")
+saveRDS(WQP_sites, "WQP_SC_ComID.rds")
