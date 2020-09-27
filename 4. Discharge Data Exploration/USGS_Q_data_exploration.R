@@ -4,6 +4,7 @@
 
 x <- c("tidyverse", "lubridate")
 lapply(x, require, character.only = TRUE)
+rm(x)
 
 setwd("/Volumes/Blaszczak Lab/FSS/All Data")
 Q <- readRDS("USGS_disch_data.rds")
@@ -14,15 +15,32 @@ Q$SiteID <- as.factor(Q$SiteID)
 
 # use SC data to filter for our sites of interest
 SC <- readRDS("all_SC_data.rds") 
+head(SC)
 Q$SiteID <- paste0("USGS-", Q$SiteID)
-Q <- Q[which(Q$SiteID %in% SC$SiteID),]
+head(Q)
+Q$SiteDate <- paste0(Q$SiteID, " ", Q$Date)
+Q <- Q[which(Q$SiteDate %in% SC$SiteDate),]
 
 Q$dqi <- as.factor(Q$dqi)
 levels(Q$dqi)
 Q <- subset(Q, dqi == "A") # (~94%)
 
 Q$SiteID <- factor(Q$SiteID) # get rid of unused levels
-levels(Q$SiteID) # 1,545 sites with Q data
+levels(Q$SiteID) # 1,391 sites with Q data and SC data
+
+diff <- setdiff(SC$SiteDate, Q$SiteDate)
+diff <- as.data.frame(diff)
+
+
+
+
+
+
+
+
+
+
+
 
 Q$Date <- ymd(Q$Date)
 Q$Year <- year(Q$Date)
