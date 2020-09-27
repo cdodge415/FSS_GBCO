@@ -1,5 +1,6 @@
 x <- c("sf", "rgdal", "raster", "tidyverse", "nhdplusTools")
 lapply(x, require, character.only = TRUE)
+rm(x)
 
 ## Bring in all necessary data
 setwd("/Volumes/Blaszczak Lab/FSS/All Data")
@@ -118,10 +119,11 @@ findCOMID <- function(x){ # x = USGS SiteID
   
 }
 
-lapply(WQP_sites$SiteID, findCOMID)
-# ~15 mins got about 17% of it done 
+lapply(WQP_sites$SiteID, findCOMID) # < 2 hrs
 setwd("/Volumes/Blaszczak Lab/FSS/All Data")
 saveRDS(WQP_sites, "WQP_SC_ComID.rds")
+
+na <- WQP_sites[is.na(WQP_sites$COMID),]
 
 
 
@@ -138,3 +140,12 @@ usgs_comid <- readRDS("USGS_SC_ComID.rds")
 nhd_attr <- subset(nhd_attr, nhd_attr$COMID %in% usgs_comid$COMID)
 setwd("/Volumes/Blaszczak Lab/FSS/All Data")
 saveRDS(nhd_attr, "USGS_SC_NLCD.rds")
+
+setwd("/Volumes/Blaszczak Lab/FSS/All Data")
+wqp_comid <- readRDS("WQP_SC_ComID.rds")
+wqp_comid$COMID <- as.factor(as.character(wqp_comid$COMID))
+levels(wqp_comid$COMID)
+
+nhd_attr <- subset(nhd_attr, nhd_attr$COMID %in% wqp_comid$COMID)
+setwd("/Volumes/Blaszczak Lab/FSS/All Data")
+saveRDS(nhd_attr, "WQP_SC_NLCD.rds")
