@@ -8,56 +8,44 @@ rm(x)
 
 setwd("/Volumes/Blaszczak Lab/FSS/All Data")
 Q <- readRDS("USGS_disch_data.rds")
-colnames(Q)
-Q <- select(Q, c("site_no", "Date", 4, 5))
-colnames(Q) <- c("SiteID", 'Date',"Q", "dqi")
-Q$SiteID <- as.factor(Q$SiteID)
+colnames(Q) # we need to keep all of these for now 
+colnames(Q)[2] <- "SiteID"
+Q$SiteID <- paste0("USGS-", Q$SiteID)
+
+## We have data through column 6 and the two discharge columns with data have the same data
+Qsub <- select(Q, c(2:5))
+head(Qsub)
+colnames(Qsub) <- c("SiteID", "Date", "Q_cfs", "dqi")
+Qsub$SiteDate <- paste0(Qsub$SiteID, " ", Qsub$Date)
+Qsub$SiteDate <- as.factor(Qsub$SiteDate)
 
 # use SC data to filter for our sites of interest
 SC <- readRDS("all_SC_data.rds") 
+SCsub <- subset(SC, SC$Source == "USGS")
+SCsub$SiteID <- factor(SCsub$SiteID)
+levels(SCsub$SiteID) # 159
 head(SC)
-Q$SiteID <- paste0("USGS-", Q$SiteID)
-head(Q)
-Q$SiteDate <- paste0(Q$SiteID, " ", Q$Date)
-Q <- Q[which(Q$SiteDate %in% SC$SiteDate),]
 
-Q$dqi <- as.factor(Q$dqi)
-levels(Q$dqi)
-Q <- subset(Q, dqi == "A") # (~94%)
-
-Q$SiteID <- factor(Q$SiteID) # get rid of unused levels
-levels(Q$SiteID) # 1,391 sites with Q data and SC data
-
-diff <- setdiff(SC$SiteDate, Q$SiteDate)
-diff <- as.data.frame(diff)
-
-
-
-
-
-
-
-
-
-
-
-
-Q$Date <- ymd(Q$Date)
-Q$Year <- year(Q$Date)
-Q$SiteDate <- paste0(Q$SiteID, " ", Q$Date)
-Q$SiteDate <- as.factor(Q$SiteDate)
+# Q$Date <- ymd(Q$Date)
+# Q$Year <- year(Q$Date)
 
 # Filter for site-dates where we have SC Data
-Q <- Q[which(Q$SiteDate %in% SC$SiteDate),]
-dup <- Q[duplicated(Q$SiteDate),]
-Q <- Q[unique(Q$SiteDate),]
-rm(dup)
+Qsub <- Qsub[which(Qsub$SiteDate %in% SC$SiteDate),]
+Qsub2 <- Qsub[unique(Qsub$SiteDate),]
+
+Qsub2 <- Qsub2[complete.cases(Qsub2),]
+table(Qsub2$dqi)
+
+Qsub2 <- subset(Qsub2, dqi == "A" | dqi == "A e") # (~94%)
+
+Qsub2$SiteID <- factor(Qsub2$SiteID) # get rid of unused levels
+levels(Qsub2$SiteID) # 420
+setdiff(SCsub$SiteID, Qsub2$SiteID) # 89
+setdiff(Qsub2$SiteID, SCsub$SiteID) # 350
 
 # Add a column for Q in cubic meters per second
-colnames(Q)
-colnames(Q)[3] <- "Q_cfs"
-
-Q$Q_cms <- Q$Q_cfs * 0.028316846592
+colnames(Qsub2)
+Qsub2$Q_cms <- Qsub2$Q_cfs * 0.028316846592
 
 # Save data file
-saveRDS(Q, "USGS_disch_dqi.rds")
+saveRDS(Qsub2, "USGS_disch_dqi.rds")
