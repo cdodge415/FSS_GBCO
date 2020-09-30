@@ -1,3 +1,5 @@
+# We may no longer need this script....we already merged the data in USGS_Q_exploration
+
 ############################################################
 ###### Merge USGS SC Data into a dataframe with USGS Q Data
 ############################################################
