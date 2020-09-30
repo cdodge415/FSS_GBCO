@@ -10,16 +10,17 @@ rm(x)
 ## Bring in data
 setwd("/Volumes/Blaszczak Lab/FSS/All Data")
 # SC Data
-dat <- readRDS("all_SC_data.rds")
+# dat <- readRDS("all_SC_data.rds")
+dat <- readRDS("USGS_disch_dqi.rds")
 sapply(dat, class)
 dat$Date <- as.POSIXct(as.character(dat$Date), format = "%Y-%m-%d")
 dat$Year <- year(dat$Date) 
 dat$Year <- as.factor(dat$Year)
 dat$doy <- strftime(dat$Date, format = "%j")
 dat$doy <- as.numeric(as.character(dat$doy))
-# Q Data
-Q <- readRDS("USGS_disch_dqi.rds")
 
+# # Q Data
+# Q <- readRDS("USGS_disch_data.rds")
 
 filter_dat <- dat # we will use this later
 
@@ -160,26 +161,41 @@ rm(med, avg, up_quart, low_quart, check, check_avg)
 setwd("/Users/laurenbolotin/Desktop/Blaszczak Lab/GB CO WQ Data/WQP Formatted Meta")
 continuous <- read.csv("WQ_USGS_SCcontinuous_site_list.csv")
 sapply(continuous, class)
-levels(continuous$SiteID)
+continuous$SiteID <- as.factor(as.character(continuous$SiteID))
+levels(continuous$SiteID) # 86
 colnames(filter_dat)
 
 # Filter SC data for these sites
-filter_dat <- select(filter_dat, -c(SiteDate, Source, Date))
-filter_dat <- subset(filter_dat, filter_dat$SiteID %in% continuous$SiteID) # 86 sites with continuous data
+# filter_dat <- select(filter_dat, -c(SiteDate, Source, Date))
+filter_dat <- subset(filter_dat, filter_dat$SiteID %in% continuous$SiteID) 
+filter_dat$SiteID <- factor(filter_dat$SiteID)
+levels(filter_dat$SiteID) # 81 sites with continuous SC data and discharge data
+
 count_cont <- plyr::count(filter_dat, vars = c("SiteID","Year")) 
 sub_cont <- subset(count_cont, count_cont$freq >= 350)
 sub_cont$SiteID <- factor(sub_cont$SiteID)
-levels(sub_cont$SiteID) # still 86 as it should be
+levels(sub_cont$SiteID) # 80
+
 # add site year to both dfs
-filter_dat$SiteYear <- paste(filter_dat$SiteID, filter_dat$Year, sep = " ")
-sub_cont$SiteYear <- paste(sub_cont$SiteID, sub_cont$Year, sep = " ")
-filter_dat <- subset(filter_dat, filter_dat$SiteYear %in% sub_cont$SiteYear)
+# filter_dat$SiteYear <- paste(filter_dat$SiteID, filter_dat$Year, sep = " ")
+# sub_cont$SiteYear <- paste(sub_cont$SiteID, sub_cont$Year, sep = " ")
+# filter_dat <- subset(filter_dat, filter_dat$SiteYear %in% sub_cont$SiteYear)
 
 # filter_dat_count <- count(filter_dat, vars = c("SiteID", "Year")) # check
 # rm(filter_dat_count)# all good
 
 # Add Q data to dataframe so we can make plots of SC time series that is flow corrected
+# colnames(Q)
+# colnames(filter_dat)
+# SCQ <- merge(filter_dat, Q,  by = c("SiteID", "Date", "SiteDate"))
 
+filter_dat$SpC_flow_corr <- filter_dat$SpC/filter_dat$Q_cms
+is.nan.data.frame <- function(x)
+  do.call(cbind, lapply(x, is.nan))
+
+filter_dat[is.nan(filter_dat)] <- NA
+
+dat_sub <- subset(filter_dat, filter_dat$Q_cfs > 0)
 
 ## Rerun Quantile and Mean Code for Filtered Dataset ####
 ## Mean
@@ -247,4 +263,50 @@ ggplot(count_sy, aes(x = vars, y = n))+
   labs(x = "Year", y = "Available Sites", title = "# of Continuous Sites per Year")
   
 
+## Rerun on Flow Corrected SpC ####
+## Mean
+avg <- dat_sub
+avg <- avg %>%
+  group_by(SiteID, doy) %>%
+  summarise_at(.vars = "SpC_flow_corr", .funs = c("mean" = mean))
+
+## Upper Quantile
+up_quart <- dat_sub
+up_quart <- up_quart %>%
+  group_by(SiteID, doy) %>%
+  summarise_at(.vars = "SpC_flow_corr", .funs = c("upper_quart" = quant75))
+
+## Median (Middle Quatile)
+med <- dat_sub
+med <- med %>%
+  group_by(SiteID, doy) %>%
+  summarise_at(.vars = "SpC_flow_corr", .funs = c("median" = median))
+
+## Lower Quantile
+low_quart <- dat_sub
+low_quart <- low_quart %>%
+  group_by(SiteID, doy) %>%
+  summarise_at(.vars = "SpC_flow_corr", .funs = c("lower_quart" = quant25))
+
+## Rerun Code to Make PDF's of All Plots of All Data + Quantile + Mean
+dat_sub$SiteID <- factor(dat_sub$SiteID)
+sites <- levels(dat_sub$SiteID)
+
+setwd("/Volumes/Blaszczak Lab/FSS/Figures/SingleTSPlots")
+plotSpC <- function(x){
+  pdf(paste0(x, "_singleTS_flowcorrected.pdf"))
+  p <- ggplot(subset(filter_dat, filter_dat$SiteID == x))+
+    theme(legend.position = "none", panel.background = element_blank(), axis.line = element_line(colour = "black"))+
+    geom_line(mapping = aes(x = doy, y = SpC_flow_corr, color = Year))+
+    geom_line(subset(low_quart, up_quart$SiteID == x), mapping = aes(x = doy, y = lower_quart), color = "black")+
+    geom_line(subset(med, avg$SiteID == x), mapping = aes(x = doy, y = median), color = "black")+
+    geom_line(subset(up_quart, up_quart$SiteID == x), mapping = aes(x = doy, y = upper_quart), color = "black")+
+    geom_line(subset(avg, avg$SiteID == x), mapping = aes(x = doy, y = mean), color = "red")
+  print(p)
+  dev.off()
+}
+
+# plotSpC(x)
+
+lapply(sites, plotSpC) # already ran and saved PDFs
   
