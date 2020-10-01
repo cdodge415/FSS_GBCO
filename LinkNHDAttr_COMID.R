@@ -127,90 +127,25 @@ na <- WQP_sites[is.na(WQP_sites$COMID),]
 
 
 
+
+
 ## Link data with NLCD data via ComID (Wieczorek & Schwarz 2019)
-# metadata: https://www.sciencebase.gov/catalog/file/get/5d66b3b6e4b0c4f70cefb11d?f=__disk__96%2F19%2Fa6%2F9619a658ff38aaa0762d0ed54dd9656d2f52546c&transform=1&allowOpen=true
-## CAT = catchment
 setwd("/Volumes/Blaszczak Lab/FSS/NLCD/NLCD16_CAT_CONUS")
 nhd_attr <- read.csv("NLCD16_CAT_CONUS.csv")
 head(nhd_attr)
-# USGS
+
 setwd("/Volumes/Blaszczak Lab/FSS/All Data")
 usgs_comid <- readRDS("USGS_SC_ComID.rds")
-usgs_comid$COMID <- as.factor(as.character(usgs_comid$COMID))
-levels(usgs_comid$COMID)
 
-nhd_attr_sub <- subset(nhd_attr, nhd_attr$COMID %in% usgs_comid$COMID)
-head(nhd_attr_sub)
-usgs_nlcd <- merge(usgs_comid, nhd_attr_sub, by = "COMID")
+nhd_attr <- subset(nhd_attr, nhd_attr$COMID %in% usgs_comid$COMID)
 setwd("/Volumes/Blaszczak Lab/FSS/All Data")
-saveRDS(usgs_nlcd, "USGS_SC_NLCD_cat.rds")
-# WQP
+saveRDS(nhd_attr, "USGS_SC_NLCD.rds")
+
 setwd("/Volumes/Blaszczak Lab/FSS/All Data")
 wqp_comid <- readRDS("WQP_SC_ComID.rds")
 wqp_comid$COMID <- as.factor(as.character(wqp_comid$COMID))
 levels(wqp_comid$COMID)
 
-nhd_attr_sub <- subset(nhd_attr, nhd_attr$COMID %in% wqp_comid$COMID)
-wqp_nlcd <- merge(wqp_comid, nhd_attr_sub, by = "COMID")
+nhd_attr <- subset(nhd_attr, nhd_attr$COMID %in% wqp_comid$COMID)
 setwd("/Volumes/Blaszczak Lab/FSS/All Data")
-saveRDS(wqp_nlcd, "WQP_SC_NLCD_cat.rds")
-
-## ACC = accumulated upstream percent area of NHDPlus version 2 flowline catchments
-setwd("/Volumes/Blaszczak Lab/FSS/NLCD")
-nhd_attr <- read.csv("NLCD16_ACC_CONUS.csv")
-head(nhd_attr)
-
-# USGS
-setwd("/Volumes/Blaszczak Lab/FSS/All Data")
-nhd_attr_sub <- subset(nhd_attr, nhd_attr$COMID %in% usgs_comid$COMID)
-head(nhd_attr_sub)
-usgs_nlcd <- merge(usgs_comid, nhd_attr_sub, by = "COMID")
-setwd("/Volumes/Blaszczak Lab/FSS/All Data")
-saveRDS(usgs_nlcd, "USGS_SC_NLCD_acc.rds")
-# WQP
-nhd_attr_sub <- subset(nhd_attr, nhd_attr$COMID %in% wqp_comid$COMID)
-wqp_nlcd <- merge(wqp_comid, nhd_attr_sub, by = "COMID")
-saveRDS(wqp_nlcd, "WQP_SC_NLCD_acc.rds")
-
-
-
-# Now link Generalized Geology Type (Reed and Bush 2001 via Wieczorek & Schwarz 2019)
-# metadata: https://www.sciencebase.gov/catalog/file/get/5703f6b5e4b0328dcb826d06?f=__disk__87%2F59%2Fac%2F8759ac764197b53a525dbad8270a975b35b27b07&transform=1&allowOpen=true
-## ACC
-# USGS
-setwd("/Volumes/Blaszczak Lab/FSS/Geology")
-geol <- read.csv("BUSHREED_ACC_CONUS.csv")
-geol_sub <- subset(geol, geol$COMID %in% usgs_comid$COMID)
-usgs_geol <- merge(usgs_comid, geol_sub, by = "COMID")
-colnames(usgs_geol)
-colnames(usgs_geol) <- c("COMID", "SiteID", "Gneiss", "Granitic", "Ultramafic", "Quarternary",
-                         "Sedimentary", "Volcanic", "Water", "Anorthositic", "Intermediate", "NO_DATA")
-setwd("/Volumes/Blaszczak Lab/FSS/All Data")
-saveRDS(usgs_geol, "USGS_SC_Geology_acc.rds")
-# WQP
-geol_sub <- subset(geol, geol$COMID %in% wqp_comid$COMID)
-wqp_geol <- merge(wqp_comid, geol_sub, by = "COMID")
-colnames(wqp_geol)
-colnames(wqp_geol) <- c("COMID", "SiteID", "Gneiss", "Granitic", "Ultramafic", "Quarternary",
-                         "Sedimentary", "Volcanic", "Water", "Anorthositic", "Intermediate", "NO_DATA")
-setwd("/Volumes/Blaszczak Lab/FSS/All Data")
-saveRDS(wqp_geol, "WQP_SC_Geology_acc.rds")
-## CAT
-# USGS
-setwd("/Volumes/Blaszczak Lab/FSS/Geology")
-geol <- read.csv("BUSHREED_CAT_CONUS.csv")
-geol_sub <- subset(geol, geol$COMID %in% usgs_comid$COMID)
-usgs_geol <- merge(usgs_comid, geol_sub, by = "COMID")
-colnames(usgs_geol)
-colnames(usgs_geol) <- c("COMID", "SiteID", "Gneiss", "Granitic", "Ultramafic", "Quarternary",
-                         "Sedimentary", "Volcanic", "Water", "Anorthositic", "Intermediate", "NO_DATA")
-setwd("/Volumes/Blaszczak Lab/FSS/All Data")
-saveRDS(usgs_geol, "USGS_SC_Geology_cat.rds")
-# WQP
-geol_sub <- subset(geol, geol$COMID %in% wqp_comid$COMID)
-wqp_geol <- merge(wqp_comid, geol_sub, by = "COMID")
-colnames(wqp_geol)
-colnames(wqp_geol) <- c("COMID", "SiteID", "Gneiss", "Granitic", "Ultramafic", "Quarternary",
-                        "Sedimentary", "Volcanic", "Water", "Anorthositic", "Intermediate", "NO_DATA")
-setwd("/Volumes/Blaszczak Lab/FSS/All Data")
-saveRDS(wqp_geol, "WQP_SC_Geology_cat.rds")
+saveRDS(nhd_attr, "WQP_SC_NLCD.rds")
