@@ -16,7 +16,43 @@ write.csv(info, "Streamgage_Matches_subset.csv")
 # have their matches used, or need new matches
 
 library(sf)
-flowlinesn <-  st_read("/Volumes/Blaszczak Lab/FSS/NHD/NHD_H_1606_HU4_Shape/NHDFlowline.shp")
+library(nhdplusTools)
+points <-  st_read("/Volumes/Blaszczak Lab/FSS/NHD/NHD_H_1606_HU4_Shape/NHDPoint.shp")
+points <- subset(points, points$FCode == 36701)
+# 1: geometry = c(-114.529638900375, 39.216577779753, 0) 
+
+# get ComID from geometry
+point <- sf::st_sfc(sf::st_point(c(-114.529638900375, 39.216577779753)), crs = 4326)
+discover_nhdplus_id(point)
+
+# based on maps.waterdata.usgs.gov and the above coordinates, I think this is USGS-10243700
+# get ComID from featureID
+nldi_nwis <- list(featureSource = "nwissite", featureID = "USGS-10243700")
+discover_nhdplus_id(nldi_feature = nldi_nwis)
+# both options give the same ComID
+
+
+# the next closest gage to the one used above based on maps.waterdata.usgs.gov is 10244950
+nldi_nwis <- list(featureSource = "nwissite", featureID = "USGS-10244950")
+discover_nhdplus_id(nldi_feature = nldi_nwis)
+
+# the coordinates of 10244950 according to the Location Map for this site are:
+point <- sf::st_sfc(sf::st_point(c(-114.412098, 39.120554)), crs = 4326)
+discover_nhdplus_id(point)
+# but this produces a different ComID than using the featureID does
+
+#-------------------------------------------------------------------
+
+# another row from our points df
+point <- sf::st_sfc(sf::st_point(c(-116.464444400497, 39.769777779936)), crs = 4326)
+discover_nhdplus_id(point)
+# appears to be this site:
+nldi_nwis <- list(featureSource = "nwissite", featureID = "USGS-10245960")
+discover_nhdplus_id(nldi_feature = nldi_nwis)
+
+
+
+
 
 
 > # Bring in list of sites with continuous SC data
