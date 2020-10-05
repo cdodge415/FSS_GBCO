@@ -103,13 +103,19 @@ ggplot(subset(dat, dat$SiteID == "USGS-10133800"))+
   geom_line(subset(up_quart, up_quart$SiteID == "USGS-10133800"), mapping = aes(x = doy, y = upper_quart), color = "grey66")
 
 # All data + quantiles + mean
-ggplot(subset(dat, dat$SiteID == "USGS-10133800"))+
+dat$Year <- as.numeric(as.character(dat$Year))
+dat$Year <- as.factor(as.character(dat$Year))
+p1 <- ggplot(subset(dat, dat$SiteID == "USGS-10133800"))+
   geom_line(mapping = aes(x = doy, y = SpC, color = Year))+
   geom_line(subset(low_quart, up_quart$SiteID == "USGS-10133800"), mapping = aes(x = doy, y = lower_quart), color = "black")+
   geom_line(subset(med, avg$SiteID == "USGS-10133800"), mapping = aes(x = doy, y = median), color = "black")+
   geom_line(subset(up_quart, up_quart$SiteID == "USGS-10133800"), mapping = aes(x = doy, y = upper_quart), color = "black")+
   geom_line(subset(avg, avg$SiteID == "USGS-10133800"), mapping = aes(x = doy, y = mean), color = "red")
 
+saveRDS(low_quart, "SC_low_quart.rds")
+saveRDS(avg, "SC_avg.rds")
+saveRDS(up_quart, "SC_up_quart.rds")
+saveRDS(med, "SC_med.rds")
 # Iterate through all sites to make the plot of all data + quantiles + mean
 ### Code for creating PDFs of plots in R: 
 ## For one site:
@@ -151,6 +157,7 @@ levels(dat$SiteID) # 85 sites
 # 
 # dat[is.nan(dat)] <- NA
 
+## THIS IS FLOW CORRECTED ###############################
 ## Rerun Quantile and Mean Code for Filtered Dataset ####
 ## Mean
 avg <- dat
@@ -175,6 +182,18 @@ low_quart <- dat
 low_quart <- low_quart %>%
   group_by(SiteID, doy) %>%
   summarise_at(.vars = "Spc_Qcms", .funs = c("lower_quart" = quant25))
+
+p2 <- ggplot(subset(dat, dat$SiteID == "USGS-10133800"))+
+  geom_line(mapping = aes(x = doy, y = Spc_Qcms, color = Year))+
+  geom_line(subset(low_quart, up_quart$SiteID == "USGS-10133800"), mapping = aes(x = doy, y = lower_quart), color = "black")+
+  geom_line(subset(med, avg$SiteID == "USGS-10133800"), mapping = aes(x = doy, y = median), color = "black")+
+  geom_line(subset(up_quart, up_quart$SiteID == "USGS-10133800"), mapping = aes(x = doy, y = upper_quart), color = "black")+
+  geom_line(subset(avg, avg$SiteID == "USGS-10133800"), mapping = aes(x = doy, y = mean), color = "red")
+
+saveRDS(low_quart, "SC_Q_low_quart.rds")
+saveRDS(avg, "SC_Q_avg.rds")
+saveRDS(up_quart, "SC_Q_up_quart.rds")
+saveRDS(med, "SC_Q_med.rds")
 
 ## Rerun Code to Make PDF's of All Plots of All Data + Quantile + Mean
 dat$SiteID <- factor(dat$SiteID)
@@ -256,3 +275,14 @@ plotSpC <- function(x){
 
 lapply(sites, plotSpC) # already ran and saved PDFs
   
+p3 <- ggplot(subset(dat, dat$SiteID == "USGS-10133800"))+
+  geom_line(mapping = aes(x = doy, y = Q_cms, color = Year))+
+  geom_line(subset(low_quart, up_quart$SiteID == "USGS-10133800"), mapping = aes(x = doy, y = lower_quart), color = "black")+
+  geom_line(subset(med, avg$SiteID == "USGS-10133800"), mapping = aes(x = doy, y = median), color = "black")+
+  geom_line(subset(up_quart, up_quart$SiteID == "USGS-10133800"), mapping = aes(x = doy, y = upper_quart), color = "black")+
+  geom_line(subset(avg, avg$SiteID == "USGS-10133800"), mapping = aes(x = doy, y = mean), color = "red")
+
+saveRDS(low_quart, "Q_low_quart.rds")
+saveRDS(avg, "Q_avg.rds")
+saveRDS(up_quart, "Q_up_quart.rds")
+saveRDS(med, "Q_med.rds")
