@@ -34,3 +34,19 @@ ggplot(subset(dat, dat$SiteID == "USGS-09041400"))+
 
 getwd()
 saveRDS(dat, "all_SC_Q_data.rds")
+
+dat_complete <- dat[complete.cases(dat),]
+dat_complete$SiteYear <- paste0(dat_complete$SiteID, " ", year(dat_complete$Date))
+
+sy_count <- table(dat_complete$SiteYear) %>%
+  as.data.frame()
+
+sy_count <- sy_count %>%
+  filter(Freq >= 340)
+
+sub_for_cont <- dat_complete %>%
+  filter(SiteYear %in% sy_count$Var1)
+
+saveRDS(sub_for_cont, "continuous_SC_Q_data.rds")
+sub_for_cont$SiteID <- factor(sub_for_cont$SiteID)
+levels(sub_for_cont$SiteID) #85
