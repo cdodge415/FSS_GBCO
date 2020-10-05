@@ -52,18 +52,57 @@ discover_nhdplus_id(nldi_feature = nldi_nwis)
 
 
 
+# > # Bring in list of sites with continuous SC data
+#   > setwd("/Users/laurenbolotin/Desktop/Blaszczak Lab/GB CO WQ Data/WQP Formatted Meta")
+# > continuous <- read.csv("WQ_USGS_SCcontinuous_site_list.csv")
+# > View(continuous)
+# > class(continuous$SiteID)
+# [1] "character"
+# > continuous$SiteID <- as.factor(continuous$SiteID)
+# > sites <- levels(continuous$SiteID)
+# > sites <- as.data.frame(sites)
+# > View(sites)
+# > setwd("/Volumes/Blaszczak Lab/FSS/All Data")
+# > saveRDS(sites, "continuous_sites_usgs.rds")
+
+
+library(nhdplusTools)
+library(sf)
+library(dplyr)
+
+# start_point <- st_sfc(st_point(c(-89.362239, 43.090266)), crs = 4269)
+# start_comid <- discover_nhdplus_id(start_point)
+start_comid <- "UTAHDWQ_WQX-4941100"
+
+flowline <- navigate_nldi(list(featureSource = "WQP",
+                               featureID = start_comid),
+                          mode = "upstreamTributaries",
+                          distance_km = 1000)
+
+subset_file <- tempfile(fileext = ".gpkg")
+subset <- subset_nhdplus(comids = flowline$nhdplus_comid,
+                         output_file = subset_file,
+                         nhdplus_data = "download",
+                         flowline_only = FALSE,
+                         return_data = TRUE)
+
+
+flowline <- subset$NHDFlowline_Network
+# catchment <- subset$CatchmentSP
+# waterbody <- subset$NHDWaterbody
+
+plot(flowline)
+colnames(flowline)
+flowline <- select(flowline, c("comid", "lengthkm", "fdate","reachcode", "ftype", "fcode", "streamorde", "gnis_name","levelpathi", "totdasqkm"))
+
+# see if streamgage has same ComID as the Truckee River
+nldi_nwis <- list(featureSource = "nwissite", featureID = "USGS-10346000")
+discover_nhdplus_id(nldi_feature = nldi_nwis)
 
 
 
-> # Bring in list of sites with continuous SC data
-  > setwd("/Users/laurenbolotin/Desktop/Blaszczak Lab/GB CO WQ Data/WQP Formatted Meta")
-> continuous <- read.csv("WQ_USGS_SCcontinuous_site_list.csv")
-> View(continuous)
-> class(continuous$SiteID)
-[1] "character"
-> continuous$SiteID <- as.factor(continuous$SiteID)
-> sites <- levels(continuous$SiteID)
-> sites <- as.data.frame(sites)
-> View(sites)
-> setwd("/Volumes/Blaszczak Lab/FSS/All Data")
-> saveRDS(sites, "continuous_sites_usgs.rds")
+
+
+
+
+
