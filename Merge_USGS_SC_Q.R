@@ -15,6 +15,7 @@ Q <- readRDS("USGS_disch_dqi.rds")
 
 colnames(SC)
 colnames(Q)
+Q$SiteDate <- paste0(Q$SiteID, " ", Q$Date)
 
 Q <- select(Q, c("SiteID", "Date", "Q_cfs", "Q_cms","SiteDate"))
 Q$Source <- "USGS"
@@ -30,3 +31,6 @@ table(dat$SiteID)
 
 ggplot(subset(dat, dat$SiteID == "USGS-09041400"))+
   geom_line(mapping = aes(Date, Spc_Qcms))
+
+getwd()
+saveRDS(dat, "all_SC_Q_data.rds")
