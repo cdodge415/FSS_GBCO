@@ -107,7 +107,7 @@ length(dat$SiteID) == length(dat.merged$SiteID)
 ###########
 setwd("~/Desktop/Blaszczak Lab/GB CO WQ Data/WQP Formatted Meta")
 head(dat.merged)
-write.csv(dat.merged, "WQP_location_data_WGS84.csv")
+saveRDS(dat.merged, "WQP_location_data_WGS84.rds")
 
 # Now that we have everything in WGS84, we actually want to put it all in NAD83 to match USGS data
 dat.WGS84.projectNAD83 <- dat.merged %>%
@@ -121,4 +121,4 @@ dat.WGS84.projectNAD83 <- dat.WGS84.projectNAD83 %>% mutate("Lat_NAD83" = st_coo
 
 setwd("~/Desktop/Blaszczak Lab/GB CO WQ Data/WQP Formatted Meta")
 head(dat.WGS84.projectNAD83)
-write.csv(dat.WGS84.projectNAD83, "WQP_location_data_NAD83.csv")
+saveRDS(dat.WGS84.projectNAD83, "WQP_location_data_NAD83.rds")
