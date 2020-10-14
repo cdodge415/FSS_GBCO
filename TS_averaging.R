@@ -3,7 +3,7 @@
 # Create "averaged" (or quantile) time series of specific conductance for each site of interest
 #################################################################################
 rm(list=ls())
-x <- c("tidyverse", "data.table", "lubridate")
+x <- c("tidyverse", "data.table", "lubridate", "zoo")
 lapply(x, require, character.only = TRUE)
 rm(x)
 ## Set the theme for our ggplots
@@ -12,13 +12,15 @@ theme_set(theme(legend.position = "none",panel.background = element_blank(),
 
 ## Bring in data
 setwd("/Volumes/Blaszczak Lab/FSS/All Data")
-dat <- readRDS("continuous_SC_Q_data.rds")
+dat <- readRDS("all_SC_data.rds")
 sapply(dat, class)
 dat$Date <- as.POSIXct(as.character(dat$Date), format = "%Y-%m-%d")
 dat$Year <- year(dat$Date) 
 dat$Year <- as.factor(dat$Year)
 dat$doy <- strftime(dat$Date, format = "%j")
 dat$doy <- as.numeric(as.character(dat$doy))
+
+dat$SiteDoy <- paste0(dat$SiteID, " ", dat$doy)
 
 ## NOT FLOW CORRECTED ####################
 ## Example Plots of Mean Time Series #####
@@ -31,12 +33,35 @@ avg <- avg %>%
 # check_avg <- mean(check$SpC)
 # rm(check, check_avg) # all good
 
+avg_count <- table(avg$SiteID) %>%
+  as.data.frame()
+
+avg_count <- filter(avg_count, Freq > 219) 
+avg <- filter(avg, SiteID %in% avg_count$Var1)
+avg$SiteID <- factor(avg$SiteID)
+levels(avg$SiteID) # 261 as opposed to 85
+
+# take a look at the gaps you now have to get an idea of how big they might be
+doys <-  seq(1,366) %>%
+  as.data.frame()
+colnames(doys) <- "doys"
+site <- "USGS-09521100"
+ex_site <- filter(avg, SiteID == site)
+check_gaps <- merge(doys, ex_site, by.x = "doys", by.y = "doy", all.x = TRUE)
+check_gaps$logical <- check_gaps$mean
+res <- rle(is.na(check_gaps$mean))
+check_gaps$gaps <- rep(res$values*res$lengths,res$lengths)
+max <- max(check_gaps$gaps)
+
+
+
+
 ggplot(subset(dat, dat$SiteID == "USGS-10133800"))+
   geom_line(mapping = aes(x = doy, y = SpC, color = Year))+
   geom_line(subset(avg, avg$SiteID == "USGS-10133800"), mapping = aes(x = doy, y = mean), color = "black")
 #####
 
-## Example Plots of Upper Quartile Time Series ####
+## Example Plots of Upper Quantile Time Series ####
 quant75 <- function(x){
   x <- quantile(x, .75)
 }
